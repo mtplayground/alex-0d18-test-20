@@ -1,8 +1,19 @@
 import type { PrismaClient, User } from "@prisma/client";
 import { serializeUser } from "./authService.js";
+import {
+  buildPaginatedItems,
+  createPaginationQuerySchema,
+  okServiceResult,
+  type OkServiceResult,
+  type Pagination
+} from "./pagination.js";
 
 export const DEFAULT_FEED_LIMIT = 20;
 export const MAX_FEED_LIMIT = 50;
+export const feedQuerySchema = createPaginationQuerySchema({
+  defaultLimit: DEFAULT_FEED_LIMIT,
+  maxLimit: MAX_FEED_LIMIT
+});
 
 type FeedPostRecord = {
   id: string;
@@ -17,6 +28,11 @@ type FeedPostRecord = {
     likes: number;
     comments: number;
   };
+};
+
+export type FeedPage = {
+  posts: ReturnType<typeof serializeFeedPost>[];
+  pagination: Pagination;
 };
 
 export function serializeFeedPost(post: FeedPostRecord) {
@@ -34,27 +50,6 @@ export function serializeFeedPost(post: FeedPostRecord) {
   };
 }
 
-export function buildPagination({
-  itemCount,
-  pageItemCount,
-  limit,
-  offset
-}: {
-  itemCount: number;
-  pageItemCount: number;
-  limit: number;
-  offset: number;
-}) {
-  const hasMore = itemCount > limit;
-
-  return {
-    limit,
-    offset,
-    nextOffset: hasMore ? offset + pageItemCount : null,
-    hasMore
-  };
-}
-
 export async function listFeedPosts({
   prisma,
   viewerId,
@@ -65,7 +60,7 @@ export async function listFeedPosts({
   viewerId: string;
   limit: number;
   offset: number;
-}) {
+}): Promise<OkServiceResult<FeedPage>> {
   const posts = await prisma.post.findMany({
     where: {
       author: {
@@ -105,15 +100,14 @@ export async function listFeedPosts({
     skip: offset,
     take: limit + 1
   });
-  const pageItems = posts.slice(0, limit);
+  const { pageItems, pagination } = buildPaginatedItems({
+    items: posts,
+    limit,
+    offset
+  });
 
-  return {
+  return okServiceResult({
     posts: pageItems.map(serializeFeedPost),
-    pagination: buildPagination({
-      itemCount: posts.length,
-      pageItemCount: pageItems.length,
-      limit,
-      offset
-    })
-  };
+    pagination
+  });
 }

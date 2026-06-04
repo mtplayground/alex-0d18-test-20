@@ -12,6 +12,7 @@ import { followUser, unfollowUser } from "./followsService.js";
 import { listFeedPosts } from "./feedService.js";
 import { updatePostLike } from "./likesService.js";
 import { createPost } from "./postsService.js";
+import { getProfile } from "./profilesService.js";
 
 type FirstArg<TFunction> = TFunction extends (arg: infer TArg) => unknown
   ? TArg
@@ -300,7 +301,7 @@ test("feed service queries followed users and paginates newest posts", async () 
     }
   } as unknown as FirstArg<typeof listFeedPosts>["prisma"];
 
-  const page = await listFeedPosts({
+  const result = await listFeedPosts({
     prisma,
     viewerId: "viewer-1",
     limit: 1,
@@ -346,14 +347,18 @@ test("feed service queries followed users and paginates newest posts", async () 
     skip: 5,
     take: 2
   });
-  assert.equal(page.posts.length, 1);
-  assert.equal(page.posts[0]?.viewerHasLiked, true);
-  assert.deepEqual(page.pagination, {
-    limit: 1,
-    offset: 5,
-    nextOffset: 6,
-    hasMore: true
-  });
+  assert.equal(result.status, "ok");
+
+  if (result.status === "ok") {
+    assert.equal(result.data.posts.length, 1);
+    assert.equal(result.data.posts[0]?.viewerHasLiked, true);
+    assert.deepEqual(result.data.pagination, {
+      limit: 1,
+      offset: 5,
+      nextOffset: 6,
+      hasMore: true
+    });
+  }
 });
 
 test("like service upserts, deletes, counts, and handles missing posts", async () => {
@@ -529,7 +534,7 @@ test("comment service lists comments with descending pagination", async () => {
     ) => await callback(tx)
   } as unknown as FirstArg<typeof listComments>["prisma"];
 
-  const page = await listComments({
+  const result = await listComments({
     prisma,
     postId: "post-1",
     limit: 2,
@@ -554,11 +559,193 @@ test("comment service lists comments with descending pagination", async () => {
     skip: 10,
     take: 3
   });
-  assert.equal(page?.comments.length, 2);
-  assert.deepEqual(page?.pagination, {
-    limit: 2,
-    offset: 10,
-    nextOffset: 12,
-    hasMore: true
+  assert.equal(result.status, "ok");
+
+  if (result.status === "ok") {
+    assert.equal(result.data.comments.length, 2);
+    assert.deepEqual(result.data.pagination, {
+      limit: 2,
+      offset: 10,
+      nextOffset: 12,
+      hasMore: true
+    });
+  }
+});
+
+test("comment service reports missing posts when listing comments", async () => {
+  const tx = {
+    post: {
+      findUnique: async () => null
+    },
+    comment: {
+      findMany: async () => []
+    }
+  };
+  const prisma = {
+    $transaction: async <TResult>(
+      callback: (transaction: typeof tx) => Promise<TResult>
+    ) => await callback(tx)
+  } as unknown as FirstArg<typeof listComments>["prisma"];
+
+  assert.deepEqual(
+    await listComments({
+      prisma,
+      postId: "missing",
+      limit: 2,
+      offset: 0
+    }),
+    {
+      status: "post-not-found"
+    }
+  );
+});
+
+test("profile service loads profile stats, posts, follow state, and pagination", async () => {
+  const findManyCalls: unknown[] = [];
+  const tx = {
+    user: {
+      findUnique: async () => ({
+        ...makeUser({ googleSub: "profile-1" }),
+        _count: {
+          posts: 2,
+          following: 3,
+          followers: 4
+        }
+      })
+    },
+    post: {
+      findMany: async (args: unknown) => {
+        findManyCalls.push(args);
+        return [
+          {
+            id: "profile-post-2",
+            authorId: "profile-1",
+            imageUrl: "https://example.com/profile-2.jpg",
+            caption: "Second",
+            createdAt,
+            updatedAt,
+            likes: [{ id: "like-1" }],
+            _count: {
+              likes: 5,
+              comments: 6
+            }
+          },
+          {
+            id: "profile-post-1",
+            authorId: "profile-1",
+            imageUrl: "https://example.com/profile-1.jpg",
+            caption: null,
+            createdAt,
+            updatedAt,
+            likes: [],
+            _count: {
+              likes: 1,
+              comments: 0
+            }
+          }
+        ];
+      }
+    },
+    follow: {
+      findUnique: async () => ({
+        followerId: "viewer-1"
+      })
+    }
+  };
+  const prisma = {
+    $transaction: async <TResult>(
+      callback: (transaction: typeof tx) => Promise<TResult>
+    ) => await callback(tx)
+  } as unknown as FirstArg<typeof getProfile>["prisma"];
+
+  const result = await getProfile({
+    prisma,
+    userId: "profile-1",
+    viewerId: "viewer-1",
+    limit: 1,
+    offset: 7
   });
+
+  assert.deepEqual(findManyCalls[0], {
+    where: {
+      authorId: "profile-1"
+    },
+    include: {
+      likes: {
+        where: {
+          userId: "viewer-1"
+        },
+        select: {
+          id: true
+        },
+        take: 1
+      },
+      _count: {
+        select: {
+          likes: true,
+          comments: true
+        }
+      }
+    },
+    orderBy: [
+      {
+        createdAt: "desc"
+      },
+      {
+        id: "desc"
+      }
+    ],
+    skip: 7,
+    take: 2
+  });
+  assert.equal(result.status, "ok");
+
+  if (result.status === "ok") {
+    assert.deepEqual(result.data.stats, {
+      postsCount: 2,
+      followingCount: 3,
+      followersCount: 4,
+      viewerIsFollowing: true
+    });
+    assert.equal(result.data.posts.length, 1);
+    assert.equal(result.data.posts[0]?.viewerHasLiked, true);
+    assert.deepEqual(result.data.pagination, {
+      limit: 1,
+      offset: 7,
+      nextOffset: 8,
+      hasMore: true
+    });
+  }
+});
+
+test("profile service reports missing users", async () => {
+  const tx = {
+    user: {
+      findUnique: async () => null
+    },
+    post: {
+      findMany: async () => []
+    },
+    follow: {
+      findUnique: async () => null
+    }
+  };
+  const prisma = {
+    $transaction: async <TResult>(
+      callback: (transaction: typeof tx) => Promise<TResult>
+    ) => await callback(tx)
+  } as unknown as FirstArg<typeof getProfile>["prisma"];
+
+  assert.deepEqual(
+    await getProfile({
+      prisma,
+      userId: "missing",
+      viewerId: "viewer-1",
+      limit: 1,
+      offset: 0
+    }),
+    {
+      status: "user-not-found"
+    }
+  );
 });

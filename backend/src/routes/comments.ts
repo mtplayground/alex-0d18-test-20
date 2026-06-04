@@ -9,26 +9,15 @@ import { getPrismaClient } from "../db/prisma.js";
 import { sendNotFound } from "../http/responses.js";
 import { requireAuth } from "../middleware/auth.js";
 import {
-  DEFAULT_COMMENT_LIMIT,
-  MAX_COMMENT_LIMIT,
   createComment,
   createCommentSchema,
-  listComments
+  listComments,
+  listCommentsQuerySchema
 } from "../services/commentsService.js";
 import { getAuthenticatedUserId, parseRequest } from "./helpers.js";
 
 const commentParamsSchema = z.object({
   postId: z.string().trim().min(1)
-});
-
-const listCommentsQuerySchema = z.object({
-  limit: z.coerce
-    .number()
-    .int()
-    .min(1)
-    .max(MAX_COMMENT_LIMIT)
-    .default(DEFAULT_COMMENT_LIMIT),
-  offset: z.coerce.number().int().min(0).default(0)
 });
 
 export const commentsRouter = Router();
@@ -117,19 +106,19 @@ commentsRouter.get(
 
       const { postId } = params;
       const { limit, offset } = query;
-      const page = await listComments({
+      const result = await listComments({
         prisma: getPrismaClient(),
         postId,
         limit,
         offset
       });
 
-      if (!page) {
+      if (result.status === "post-not-found") {
         sendNotFound(res, "Post was not found");
         return;
       }
 
-      res.json(page);
+      res.json(result.data);
     } catch (error) {
       next(error);
     }
