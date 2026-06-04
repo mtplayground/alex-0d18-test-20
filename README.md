@@ -1,1 +1,19 @@
 # alex-0d18-test-20
+
+Monorepo with a React frontend and Express backend.
+
+## Packages
+
+- `frontend/`: Vite + React app
+- `backend/`: Express API server
+
+## Scripts
+
+```bash
+npm install
+npm run dev
+npm run build
+npm start
+```
+
+The backend listens on `0.0.0.0:8080` by default and exposes `GET /api/health`.
