@@ -1,38 +1,56 @@
-Architecture plan
+Architecture plan for issues #57-#62
 
 Project shape
-- Use a Node/TypeScript monorepo with two first-class packages:
-  - frontend/: Vite + React SPA, React Router routes, AuthContext, API client, Tailwind app shell.
-  - backend/: Express API, route modules, service modules, Prisma client, middleware, validation, tests.
-- Keep root-level package/workspace configuration so shared scripts can run lint, format, typecheck, test, and build across both packages.
-- Shared contracts should live in shared/ or packages/shared once Issue #2 introduces TypeScript conventions. Use Zod schemas as the source for request/response validation where practical, and export inferred types for frontend consumption.
+- alex-0d18-test-20 is a Node/TypeScript monorepo.
+- frontend/: Vite + React + React Router + Tailwind. Current API calls are centralized in frontend/src/lib/api.ts, and repeated feed/profile UI lives inside page files.
+- backend/: Express + TypeScript + Prisma + Zod. Routes validate at HTTP boundaries, services own Prisma access, and backend/src/http/responses.ts owns the JSON error response shape.
 
-Suggested file organization
-- frontend/src/
-  - main.tsx, App.tsx, routes/, pages/, components/, contexts/auth.tsx, lib/api.ts, lib/storage.ts, styles/
-  - Pages map to product flows: feed, create post, profile, auth callback.
-- backend/src/
-  - server.ts, app.ts, config/env.ts, prisma.ts
-  - routes/auth.ts, me.ts, posts.ts, uploads.ts, follows.ts, feed.ts, likes.ts, comments.ts, profiles.ts
-  - services/authService.ts, postService.ts, followService.ts, feedService.ts, interactionService.ts, profileService.ts, storageService.ts
-  - middleware/auth.ts, errors.ts, validate.ts
-  - schemas/ for Zod request contracts and types/ for Express request augmentation.
-- prisma/
-  - schema.prisma and migrations/ added incrementally by model issues.
+Frontend module structure
+- Split frontend/src/lib/api.ts into:
+  - frontend/src/lib/api/http.ts: getApiUrl(), parseJsonResponse(), shared request helpers.
+  - frontend/src/lib/api/types.ts: ApiUser, ApiPost, pagination, feed/profile/comment/like/upload response types.
+  - frontend/src/lib/api/authApi.ts: buildLoginUrl(), exchangeAuthCallback(), fetchCurrentUser().
+  - frontend/src/lib/api/postsApi.ts: requestPresignedUpload(), uploadFileToStorage(), createPost().
+  - frontend/src/lib/api/feedApi.ts: fetchFeed().
+  - frontend/src/lib/api/profilesApi.ts: fetchProfile().
+  - frontend/src/lib/api/socialApi.ts: followUser(), unfollowUser(), likePost(), unlikePost(), fetchComments(), createComment().
+  - frontend/src/lib/api/index.ts: compatibility barrel so existing imports can migrate gradually.
+- Extract shared UI after the API split:
+  - frontend/src/components/posts/PostCard.tsx for image, author, caption, like/comment summary, and optional comments region.
+  - frontend/src/components/comments/CommentList.tsx and CommentComposer.tsx for comment loading/rendering/composition.
+  - frontend/src/components/social/FollowButton.tsx for follow/unfollow visual states and disabled handling.
+  - frontend/src/components/users/UserAvatar.tsx for shared avatar fallback.
+- Keep FeedPage.tsx and ProfilePage.tsx responsible for page-level data loading, pagination, optimistic state, and component composition only.
 
-Issue dependency map
-- Foundation: #1 creates the monorepo; #2 adds TypeScript/lint/format; #3 adds Prisma/PostgreSQL; #4 adds Tailwind/router shell; #5 centralizes environment config.
-- Auth path: #6 users model -> #7 Google OAuth callback/JWT -> #8 auth middleware and GET /me -> #9 frontend sign-in/AuthContext -> #10 logged-in user display.
-- Posting path: #11 posts model -> #12 presigned upload URL -> #13 create post endpoint -> #14 upload/create-post UI.
-- Follow/feed path: #15 follows model -> #16 follow/unfollow endpoints -> #17 feed endpoint -> #18 follow button and feed page.
-- Interactions/profile path: #19 likes/comments models -> #20 like/unlike -> #21 comments -> #22 UI for likes/comments; #23 profile endpoint -> #24 profile page.
-- Hardening: #25 unit tests, #26 validation/error review, #27 end-to-end core flow, #28 self-hosting deployment prep.
+Backend module structure
+- Add backend/src/routes/helpers.ts or backend/src/http/routeHelpers.ts for route-boundary helpers:
+  - getAuthenticatedUserId(req) / requireAuthenticatedUserId(req, res).
+  - parseRequest(schema, input, res, message) for params, query, and body safeParse handling.
+  - Optional async handler wrapper only if it matches the existing Express route style cleanly.
+- Keep response serialization and error codes in backend/src/http/responses.ts; route helpers should call those functions rather than invent new response shapes.
+- Move shared pagination utilities out of feedService.ts into backend/src/services/pagination.ts:
+  - DEFAULT/MAX constants can remain domain-specific, but query schema builders and buildPagination() should be reusable.
+  - Use a generic Page<T> / Pagination type for service results.
+- Move profile Prisma/read logic out of backend/src/routes/profiles.ts into backend/src/services/profilesService.ts so routes stay thin and Issue #60 can normalize profile results with feed/comments.
+- Add backend/src/config/runtime.ts or extend backend/src/config/env.ts with getRuntimeConfig(), returning grouped app/auth/s3/jwt config while preserving existing env validation functions.
+
+Shared types and result shapes
+- Frontend API types should describe the backend JSON contracts and share one Pagination type across feed, comments, and profile responses.
+- Backend service results should consistently use discriminated unions for expected business outcomes, for example status: "ok" | "not-found" | "invalid-image-url" where appropriate.
+- Page-producing services should return { items-domain-key, pagination } at the route contract layer, while sharing a common internal pagination builder to avoid duplicate limit+1 slicing logic.
+
+Issue dependencies and order
+- #57 is independent and should go first. It reduces frontend merge risk before UI extraction.
+- #58 depends on #57 because extracted UI should import domain API clients/types from the new API structure.
+- #59 is independent and should precede backend service normalization. It centralizes current-user extraction and Zod failure handling across feed, comments, follows, likes, posts, uploads, profiles, and me.
+- #60 depends on #59. After routes are thinner, normalize feed/comments/profile pagination helpers and service result unions without mixing route-helper churn into the same change.
+- #61 is independent but should be coordinated with #59/#60 because route and service files will be touched. Prefer landing it before broad route/service edits if possible.
+- #62 depends on #59 and #60. Add route-level tests after helpers and result shapes settle so tests lock final validation/error behavior.
 
 Key design decisions
-- Authentication: backend exchanges Google authorization code, upserts users by google_sub, issues JWT containing user id. Frontend stores token and sends Authorization: Bearer headers. GET /me is the canonical session hydration endpoint.
-- Database: Prisma models should use stable cuid/uuid primary keys, explicit createdAt/updatedAt fields, unique constraints for google_sub, follows(followerId, followeeId), and likes(userId, postId), plus indexes for feed/profile queries.
-- API style: REST endpoints grouped by resource. Keep business logic in services so #25 can unit test auth, posts, follows, feed, likes, and comments without HTTP setup.
-- Uploads: backend only signs object-storage uploads and persists the final public/object URL when creating posts. Validate content type, size intent, and ownership-sensitive actions.
-- Frontend: keep UI state thin; use a central API helper for auth headers and error handling. Route guards should rely on AuthContext and /me.
-- Errors and validation: introduce consistent JSON errors early, then complete review in #26. Zod schemas should protect all mutating endpoints.
-- Deployment: #28 should provide production scripts, Prisma migration instructions, environment docs, and self-hosting notes for database, Google OAuth, object storage, JWT secret, frontend URL, and backend URL.
+- Preserve all public behavior and JSON response shapes unless an issue explicitly asks to change them.
+- Avoid moving Prisma access into routes. New backend shared helpers should support, not blur, the existing route/service separation.
+- Use Zod at route boundaries only. Services should receive parsed, typed values and return explicit service results.
+- Keep compatibility barrels during frontend API splitting to reduce import churn, then update page imports by domain.
+- Do not introduce a shared package unless implementation later proves cross-package contracts need it; current scope can stay within frontend and backend folders.
+- Route-level tests in #62 should focus on validation errors, missing auth, not-found branches, and stable error codes/messages; keep service and E2E coverage in place.
