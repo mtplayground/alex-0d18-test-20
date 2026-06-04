@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "npm run prisma:generate && tsc",
-    "test": "node --import tsx --test src/services/*.test.ts",
+    "test": "node --import tsx --test src/services/*.test.ts src/e2e/*.test.ts",
     "typecheck": "npm run prisma:generate && tsc --noEmit",
     "prisma:generate": "prisma generate --schema ../prisma/schema.prisma",
     "prisma:validate": "prisma validate --schema ../prisma/schema.prisma",
