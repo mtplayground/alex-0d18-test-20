@@ -23,10 +23,39 @@ export type ApiPost = {
 
 export type ApiFeedPost = ApiPost & {
   author: ApiUser;
+  likesCount: number;
+  commentsCount: number;
+  viewerHasLiked: boolean;
 };
 
 export type FeedPage = {
   posts: ApiFeedPost[];
+  pagination: {
+    limit: number;
+    offset: number;
+    nextOffset: number | null;
+    hasMore: boolean;
+  };
+};
+
+export type LikeState = {
+  liked: boolean;
+  postId: string;
+  likesCount: number;
+};
+
+export type ApiComment = {
+  id: string;
+  postId: string;
+  authorId: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  author: ApiUser;
+};
+
+export type CommentsPage = {
+  comments: ApiComment[];
   pagination: {
     limit: number;
     offset: number;
@@ -215,4 +244,100 @@ export async function unfollowUser({
   );
 
   await parseJsonResponse<unknown>(response);
+}
+
+export async function likePost({
+  token,
+  postId
+}: {
+  token: string;
+  postId: string;
+}): Promise<LikeState> {
+  const response = await fetch(
+    getApiUrl(`/api/likes/${encodeURIComponent(postId)}`),
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  return await parseJsonResponse<LikeState>(response);
+}
+
+export async function unlikePost({
+  token,
+  postId
+}: {
+  token: string;
+  postId: string;
+}): Promise<LikeState> {
+  const response = await fetch(
+    getApiUrl(`/api/likes/${encodeURIComponent(postId)}`),
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  return await parseJsonResponse<LikeState>(response);
+}
+
+export async function fetchComments({
+  token,
+  postId,
+  limit = 50,
+  offset = 0
+}: {
+  token: string;
+  postId: string;
+  limit?: number;
+  offset?: number;
+}): Promise<CommentsPage> {
+  const params = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset)
+  });
+  const response = await fetch(
+    getApiUrl(
+      `/api/comments/${encodeURIComponent(postId)}?${params.toString()}`
+    ),
+    {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  return await parseJsonResponse<CommentsPage>(response);
+}
+
+export async function createComment({
+  token,
+  postId,
+  content
+}: {
+  token: string;
+  postId: string;
+  content: string;
+}): Promise<ApiComment> {
+  const response = await fetch(
+    getApiUrl(`/api/comments/${encodeURIComponent(postId)}`),
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        content
+      })
+    }
+  );
+
+  const body = await parseJsonResponse<{ comment: ApiComment }>(response);
+  return body.comment;
 }
