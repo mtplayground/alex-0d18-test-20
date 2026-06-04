@@ -4,6 +4,9 @@ import express, {
   type Request,
   type Response
 } from "express";
+import { existsSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { authRouter } from "./routes/auth.js";
 import { commentsRouter } from "./routes/comments.js";
 import { feedRouter } from "./routes/feed.js";
@@ -14,6 +17,10 @@ import { postsRouter } from "./routes/posts.js";
 import { profilesRouter } from "./routes/profiles.js";
 import { uploadsRouter } from "./routes/uploads.js";
 import { sendError } from "./http/responses.js";
+
+const currentDir = dirname(fileURLToPath(import.meta.url));
+const frontendDistPath = resolve(currentDir, "../../frontend/dist");
+const frontendIndexPath = join(frontendDistPath, "index.html");
 
 export function createApp() {
   const app = express();
@@ -42,6 +49,13 @@ export function createApp() {
   app.use("/api", (_req: Request, res: Response) => {
     sendError(res, 404, "NOT_FOUND", "Not Found");
   });
+
+  if (existsSync(frontendIndexPath)) {
+    app.use(express.static(frontendDistPath));
+    app.get("*", (_req: Request, res: Response) => {
+      res.sendFile(frontendIndexPath);
+    });
+  }
 
   const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     console.error("Unhandled request error", {
