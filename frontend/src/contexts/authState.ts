@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import type { ApiUser } from "../lib/api";
+import type { ApiUser } from "../lib/api/types";
 
 export type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 

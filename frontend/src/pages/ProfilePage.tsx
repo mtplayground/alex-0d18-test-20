@@ -7,12 +7,9 @@ import {
 } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../contexts/useAuth";
-import {
-  fetchProfile,
-  followUser,
-  unfollowUser,
-  type ApiProfile
-} from "../lib/api";
+import { fetchProfile } from "../lib/api/profilesApi";
+import { followUser, unfollowUser } from "../lib/api/socialApi";
+import type { ApiProfile } from "../lib/api/types";
 
 const PROFILE_PAGE_SIZE = 24;
 

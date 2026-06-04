@@ -13,9 +13,9 @@ import {
 import {
   buildLoginUrl,
   exchangeAuthCallback,
-  fetchCurrentUser,
-  type ApiUser
-} from "../lib/api";
+  fetchCurrentUser
+} from "../lib/api/authApi";
+import type { ApiUser } from "../lib/api/types";
 
 const TOKEN_STORAGE_KEY = "auth_token";
 
