@@ -14,6 +14,29 @@ import {
 
 export const authRouter = Router();
 
+function getFrontendReturnTo(
+  req: Request,
+  allowedOrigin: string
+): string | null {
+  const returnTo = req.query.return_to;
+
+  if (typeof returnTo !== "string") {
+    return null;
+  }
+
+  try {
+    const returnToUrl = new URL(returnTo);
+
+    if (returnToUrl.origin !== allowedOrigin) {
+      return null;
+    }
+
+    return returnToUrl.toString();
+  } catch {
+    return null;
+  }
+}
+
 function getMctaiSessionCookie(req: Request): string | undefined {
   const cookies = req.cookies as Record<string, string | undefined> | undefined;
   return cookies?.mctai_session;
@@ -23,10 +46,16 @@ authRouter.get("/login", (_req: Request, res: Response, next: NextFunction) => {
   try {
     const authEnv = getAuthEnv();
     const loginUrl = new URL("/login", authEnv.MCTAI_AUTH_URL);
-    const returnToUrl = new URL("/api/auth/callback", authEnv.SELF_URL);
+    const returnTo = getFrontendReturnTo(
+      _req,
+      new URL(authEnv.SELF_URL).origin
+    );
 
     loginUrl.searchParams.set("app_token", authEnv.MCTAI_AUTH_APP_TOKEN);
-    loginUrl.searchParams.set("return_to", returnToUrl.toString());
+    loginUrl.searchParams.set(
+      "return_to",
+      returnTo ?? new URL("/auth/callback", authEnv.SELF_URL).toString()
+    );
 
     res.redirect(loginUrl.toString());
   } catch (error) {
