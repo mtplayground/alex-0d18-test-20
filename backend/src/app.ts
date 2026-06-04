@@ -1,14 +1,19 @@
+import cookieParser from "cookie-parser";
 import express, {
   type ErrorRequestHandler,
   type Request,
   type Response
 } from "express";
+import { authRouter } from "./routes/auth.js";
 
 export function createApp() {
   const app = express();
 
   app.disable("x-powered-by");
+  app.use(cookieParser());
   app.use(express.json({ limit: "1mb" }));
+
+  app.use("/api/auth", authRouter);
 
   app.get("/api/health", (_req: Request, res: Response) => {
     res.json({

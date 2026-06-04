@@ -25,3 +25,4 @@ npm start
 The backend listens on `0.0.0.0:8080` by default and exposes `GET /api/health`.
 Prisma is configured for PostgreSQL via `DATABASE_URL`.
 Runtime configuration is documented in `.env.example`.
+Authentication routes are mounted under `/api/auth`.
