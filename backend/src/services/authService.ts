@@ -5,7 +5,7 @@ import jwt, {
   type SigningKeyCallback
 } from "jsonwebtoken";
 import jwksClient, { type JwksClient } from "jwks-rsa";
-import { getAuthEnv, getJwtEnv } from "../config/env.js";
+import { getRuntimeConfig } from "../config/env.js";
 import { getPrismaClient } from "../db/prisma.js";
 
 export type VerifiedAuthClaims = JwtPayload & {
@@ -105,7 +105,7 @@ function normalizeClaims(decoded: string | JwtPayload): VerifiedAuthClaims {
 export async function verifyMctaiSession(
   sessionToken: string
 ): Promise<VerifiedAuthClaims> {
-  const authEnv = getAuthEnv();
+  const authEnv = getRuntimeConfig().auth;
   const client = getJwksClient(authEnv.MCTAI_AUTH_JWKS_URL);
 
   return await new Promise<VerifiedAuthClaims>((resolve, reject) => {
@@ -163,7 +163,7 @@ export async function upsertUserFromClaims(
 }
 
 export function issueAppJwt(user: User): string {
-  const jwtEnv = getJwtEnv();
+  const jwtEnv = getRuntimeConfig().jwt;
 
   return jwt.sign(
     {

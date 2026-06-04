@@ -2,7 +2,7 @@ import type { PublicUser } from "../services/authService.js";
 import type { JwtPayload } from "jsonwebtoken";
 import jwt from "jsonwebtoken";
 import type { NextFunction, Request, Response } from "express";
-import { getJwtEnv } from "../config/env.js";
+import { getRuntimeConfig } from "../config/env.js";
 import { getPrismaClient } from "../db/prisma.js";
 import { sendUnauthorized } from "../http/responses.js";
 import { serializeUser } from "../services/authService.js";
@@ -46,7 +46,7 @@ function normalizeAppJwtClaims(decoded: string | JwtPayload): AppJwtClaims {
 }
 
 function verifyAppJwt(token: string): AppJwtClaims {
-  const jwtEnv = getJwtEnv();
+  const jwtEnv = getRuntimeConfig().jwt;
   const decoded = jwt.verify(token, jwtEnv.JWT_SECRET);
   return normalizeAppJwtClaims(decoded);
 }

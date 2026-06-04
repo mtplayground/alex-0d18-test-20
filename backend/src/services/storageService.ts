@@ -1,7 +1,7 @@
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "node:crypto";
-import { getS3Env } from "../config/env.js";
+import { getRuntimeConfig } from "../config/env.js";
 
 const PRESIGNED_UPLOAD_EXPIRES_SECONDS = 300;
 const UPLOAD_KEY_PREFIX = "posts";
@@ -13,7 +13,7 @@ function getS3Client(): S3Client {
     return cachedS3Client;
   }
 
-  const env = getS3Env();
+  const env = getRuntimeConfig().s3;
 
   cachedS3Client = new S3Client({
     region: env.S3_REGION,
@@ -43,7 +43,7 @@ function getFileExtension(contentType: string): string {
 }
 
 function getPublicUrl(fullKey: string): string {
-  const env = getS3Env();
+  const env = getRuntimeConfig().s3;
   const publicBaseUrl = env.S3_PUBLIC_BASE_URL.replace(/\/$/, "");
   return `${publicBaseUrl}/${fullKey}`;
 }
@@ -71,7 +71,7 @@ export async function createPresignedUploadUrl({
   contentType,
   contentLength
 }: PresignedUploadInput): Promise<PresignedUpload> {
-  const env = getS3Env();
+  const env = getRuntimeConfig().s3;
   const extension = getFileExtension(contentType);
   const now = new Date();
   const datePath = [

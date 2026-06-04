@@ -46,8 +46,15 @@ export type AppEnv = z.infer<typeof appEnvSchema>;
 export type AuthEnv = z.infer<typeof authEnvSchema>;
 export type S3Env = z.infer<typeof s3EnvSchema>;
 export type JwtEnv = z.infer<typeof jwtEnvSchema>;
+export type RuntimeConfig = {
+  app: AppEnv;
+  auth: AuthEnv;
+  s3: S3Env;
+  jwt: JwtEnv;
+};
 
 let cachedAppEnv: AppEnv | null = null;
+let cachedRuntimeConfig: RuntimeConfig | null = null;
 
 function formatEnvError(error: z.ZodError): string {
   return error.issues
@@ -95,4 +102,25 @@ export function getS3Env(input: NodeJS.ProcessEnv = process.env): S3Env {
 
 export function getJwtEnv(input: NodeJS.ProcessEnv = process.env): JwtEnv {
   return parseEnv(jwtEnvSchema, "JWT", input);
+}
+
+export function getRuntimeConfig(
+  input: NodeJS.ProcessEnv = process.env
+): RuntimeConfig {
+  if (input === process.env && cachedRuntimeConfig) {
+    return cachedRuntimeConfig;
+  }
+
+  const config: RuntimeConfig = {
+    app: getEnv(input),
+    auth: getAuthEnv(input),
+    s3: getS3Env(input),
+    jwt: getJwtEnv(input)
+  };
+
+  if (input === process.env) {
+    cachedRuntimeConfig = config;
+  }
+
+  return config;
 }

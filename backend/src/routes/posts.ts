@@ -4,7 +4,7 @@ import {
   type Request,
   type Response
 } from "express";
-import { getS3Env } from "../config/env.js";
+import { getRuntimeConfig } from "../config/env.js";
 import { getPrismaClient } from "../db/prisma.js";
 import { sendError } from "../http/responses.js";
 import { requireAuth } from "../middleware/auth.js";
@@ -40,7 +40,7 @@ postsRouter.post(
         authorId,
         imageUrl: body.imageUrl,
         caption: body.caption,
-        s3Env: getS3Env()
+        s3Env: getRuntimeConfig().s3
       });
 
       if (result.status === "invalid-image-url") {
