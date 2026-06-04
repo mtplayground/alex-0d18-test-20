@@ -20,6 +20,9 @@
     "prisma:generate": "npm run prisma:generate --workspace backend",
     "prisma:validate": "npm run prisma:validate --workspace backend",
     "prisma:migrate": "npm run prisma:migrate --workspace backend",
+    "deploy:build": "npm run build",
+    "deploy:migrate": "npm run prisma:migrate",
+    "deploy:start": "sh scripts/start-production.sh",
     "start": "npm run start --workspace backend"
   },
   "devDependencies": {
