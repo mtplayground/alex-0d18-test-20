@@ -4,7 +4,7 @@ Monorepo with a React frontend and Express backend.
 
 ## Packages
 
-- `frontend/`: Vite + React app
+- `frontend/`: Vite + React app with Tailwind and React Router
 - `backend/`: Express API server
 
 ## Scripts
