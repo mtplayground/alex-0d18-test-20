@@ -15,6 +15,8 @@ model User {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   posts     Post[]
+  following Follow[] @relation("FollowFollower")
+  followers Follow[] @relation("FollowFollowee")
 
   @@map("users")
 }
@@ -30,4 +32,15 @@ model Post {
 
   @@index([authorId])
   @@map("posts")
+}
+
+model Follow {
+  followerId String @map("follower_id")
+  followeeId String @map("followee_id")
+  follower   User   @relation("FollowFollower", fields: [followerId], references: [googleSub], onDelete: Cascade)
+  followee   User   @relation("FollowFollowee", fields: [followeeId], references: [googleSub], onDelete: Cascade)
+
+  @@id([followerId, followeeId])
+  @@index([followeeId])
+  @@map("follows")
 }
