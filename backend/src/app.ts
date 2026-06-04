@@ -11,6 +11,7 @@ import { followsRouter } from "./routes/follows.js";
 import { likesRouter } from "./routes/likes.js";
 import { meRouter } from "./routes/me.js";
 import { postsRouter } from "./routes/posts.js";
+import { profilesRouter } from "./routes/profiles.js";
 import { uploadsRouter } from "./routes/uploads.js";
 
 export function createApp() {
@@ -26,6 +27,7 @@ export function createApp() {
   app.use("/api/follows", followsRouter);
   app.use("/api/likes", likesRouter);
   app.use("/api/posts", postsRouter);
+  app.use("/api/profiles", profilesRouter);
   app.use("/api/uploads", uploadsRouter);
   app.use("/me", meRouter);
 
