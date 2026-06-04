@@ -8,19 +8,21 @@ import {
 } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/useAuth";
+import { fetchFeed } from "../lib/api/feedApi";
 import {
   createComment,
-  fetchFeed,
   fetchComments,
   followUser,
   likePost,
   unfollowUser,
-  unlikePost,
-  type ApiComment,
-  type ApiFeedPost,
-  type CommentsPage,
-  type FeedPage
-} from "../lib/api";
+  unlikePost
+} from "../lib/api/socialApi";
+import type {
+  ApiComment,
+  ApiFeedPost,
+  CommentsPage,
+  FeedPage
+} from "../lib/api/types";
 
 const FEED_PAGE_SIZE = 20;
 const COMMENTS_PAGE_SIZE = 20;

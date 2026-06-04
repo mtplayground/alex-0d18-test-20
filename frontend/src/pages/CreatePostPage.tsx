@@ -10,9 +10,9 @@ import { useAuth } from "../contexts/useAuth";
 import {
   createPost,
   requestPresignedUpload,
-  uploadFileToStorage,
-  type ApiPost
-} from "../lib/api";
+  uploadFileToStorage
+} from "../lib/api/postsApi";
+import type { ApiPost } from "../lib/api/types";
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = new Set([

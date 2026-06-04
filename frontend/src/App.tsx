@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { NavLink, Route, Routes, useNavigate } from "react-router-dom";
 import { useAuth } from "./contexts/useAuth";
-import type { ApiUser } from "./lib/api";
+import type { ApiUser } from "./lib/api/types";
 import { CreatePostPage } from "./pages/CreatePostPage";
 import { FeedPageView } from "./pages/FeedPage";
 import { ProfilePage } from "./pages/ProfilePage";
