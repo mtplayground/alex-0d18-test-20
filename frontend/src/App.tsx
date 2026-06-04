@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { NavLink, Route, Routes, useNavigate } from "react-router-dom";
 import { useAuth } from "./contexts/useAuth";
+import type { ApiUser } from "./lib/api";
 
 const navItems = [
   { label: "Home", to: "/", end: true },
@@ -36,7 +37,7 @@ export default function App() {
             </nav>
           </div>
 
-          <AuthButton />
+          <AuthControls />
         </div>
       </header>
 
@@ -53,20 +54,75 @@ export default function App() {
   );
 }
 
-function AuthButton() {
-  const { signIn, signOut, status } = useAuth();
+function AuthControls() {
+  const { signIn, signOut, status, user } = useAuth();
   const isAuthenticated = status === "authenticated";
+
+  if (isAuthenticated && user) {
+    return (
+      <div className="flex min-w-0 items-center gap-3">
+        <UserSummary user={user} />
+        <button
+          type="button"
+          onClick={signOut}
+          className="inline-flex h-10 shrink-0 items-center justify-center rounded-md border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-900 shadow-sm transition-colors hover:border-zinc-400 hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+        >
+          Sign out
+        </button>
+      </div>
+    );
+  }
 
   return (
     <button
       type="button"
-      onClick={isAuthenticated ? signOut : signIn}
+      onClick={signIn}
       disabled={status === "loading"}
       className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-900 shadow-sm transition-colors hover:border-zinc-400 hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {isAuthenticated ? "Sign out" : "Sign in"}
+      Sign in
     </button>
   );
+}
+
+function UserSummary({ user }: { user: ApiUser }) {
+  const displayName = user.name?.trim() || user.email;
+  const avatarLabel = `${displayName}'s profile image`;
+
+  return (
+    <div
+      className="flex min-w-0 items-center gap-2"
+      aria-label={`Signed in as ${displayName}`}
+    >
+      {user.avatarUrl ? (
+        <img
+          src={user.avatarUrl}
+          alt={avatarLabel}
+          className="size-10 shrink-0 rounded-full border border-zinc-200 object-cover"
+          referrerPolicy="no-referrer"
+        />
+      ) : (
+        <div
+          aria-hidden="true"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-sm font-semibold text-emerald-800"
+        >
+          {getUserInitial(displayName)}
+        </div>
+      )}
+      <div className="hidden min-w-0 flex-col sm:flex">
+        <span className="max-w-40 truncate text-sm font-semibold leading-5 text-zinc-950">
+          {displayName}
+        </span>
+        <span className="max-w-40 truncate text-xs leading-4 text-zinc-500">
+          Signed in
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function getUserInitial(value: string): string {
+  return value.trim().charAt(0).toUpperCase() || "?";
 }
 
 function PageFrame({
