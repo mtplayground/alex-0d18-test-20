@@ -13,6 +13,7 @@ import { meRouter } from "./routes/me.js";
 import { postsRouter } from "./routes/posts.js";
 import { profilesRouter } from "./routes/profiles.js";
 import { uploadsRouter } from "./routes/uploads.js";
+import { sendError } from "./http/responses.js";
 
 export function createApp() {
   const app = express();
@@ -39,9 +40,7 @@ export function createApp() {
   });
 
   app.use("/api", (_req: Request, res: Response) => {
-    res.status(404).json({
-      error: "Not Found"
-    });
+    sendError(res, 404, "NOT_FOUND", "Not Found");
   });
 
   const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
@@ -55,9 +54,11 @@ export function createApp() {
       stack: err instanceof Error ? err.stack : undefined
     });
 
-    res.status(500).json({
-      error: "Internal Server Error"
-    });
+    if (res.headersSent) {
+      return;
+    }
+
+    sendError(res, 500, "INTERNAL_SERVER_ERROR", "Internal Server Error");
   };
 
   app.use(errorHandler);

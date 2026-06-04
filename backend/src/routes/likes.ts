@@ -6,6 +6,11 @@ import {
 } from "express";
 import { z } from "zod";
 import { getPrismaClient } from "../db/prisma.js";
+import {
+  sendNotFound,
+  sendUnauthorized,
+  sendValidationError
+} from "../http/responses.js";
 import { requireAuth } from "../middleware/auth.js";
 import { updatePostLike } from "../services/likesService.js";
 
@@ -20,10 +25,7 @@ function getAuthenticatedUserId(req: Request): string | null {
 }
 
 function sendInvalidLikeRequest(res: Response, error: z.ZodError) {
-  res.status(400).json({
-    error: "Invalid like request",
-    details: error.flatten().fieldErrors
-  });
+  sendValidationError(res, error, "Invalid like request");
 }
 
 likesRouter.post(
@@ -41,9 +43,7 @@ likesRouter.post(
       const userId = getAuthenticatedUserId(req);
 
       if (!userId) {
-        res.status(401).json({
-          error: "Missing authenticated user"
-        });
+        sendUnauthorized(res, "Missing authenticated user");
         return;
       }
 
@@ -56,9 +56,7 @@ likesRouter.post(
       });
 
       if (!likeState) {
-        res.status(404).json({
-          error: "Post was not found"
-        });
+        sendNotFound(res, "Post was not found");
         return;
       }
 
@@ -84,9 +82,7 @@ likesRouter.delete(
       const userId = getAuthenticatedUserId(req);
 
       if (!userId) {
-        res.status(401).json({
-          error: "Missing authenticated user"
-        });
+        sendUnauthorized(res, "Missing authenticated user");
         return;
       }
 
@@ -99,9 +95,7 @@ likesRouter.delete(
       });
 
       if (!likeState) {
-        res.status(404).json({
-          error: "Post was not found"
-        });
+        sendNotFound(res, "Post was not found");
         return;
       }
 

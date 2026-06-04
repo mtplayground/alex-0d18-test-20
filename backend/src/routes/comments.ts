@@ -6,6 +6,11 @@ import {
 } from "express";
 import { z } from "zod";
 import { getPrismaClient } from "../db/prisma.js";
+import {
+  sendNotFound,
+  sendUnauthorized,
+  sendValidationError
+} from "../http/responses.js";
 import { requireAuth } from "../middleware/auth.js";
 import {
   DEFAULT_COMMENT_LIMIT,
@@ -36,10 +41,7 @@ function getAuthenticatedUserId(req: Request): string | null {
 }
 
 function sendInvalidCommentRequest(res: Response, error: z.ZodError) {
-  res.status(400).json({
-    error: "Invalid comment request",
-    details: error.flatten().fieldErrors
-  });
+  sendValidationError(res, error, "Invalid comment request");
 }
 
 commentsRouter.post(
@@ -64,9 +66,7 @@ commentsRouter.post(
       const authorId = getAuthenticatedUserId(req);
 
       if (!authorId) {
-        res.status(401).json({
-          error: "Missing authenticated user"
-        });
+        sendUnauthorized(res, "Missing authenticated user");
         return;
       }
 
@@ -79,9 +79,7 @@ commentsRouter.post(
       });
 
       if (!comment) {
-        res.status(404).json({
-          error: "Post was not found"
-        });
+        sendNotFound(res, "Post was not found");
         return;
       }
 
@@ -123,9 +121,7 @@ commentsRouter.get(
       });
 
       if (!page) {
-        res.status(404).json({
-          error: "Post was not found"
-        });
+        sendNotFound(res, "Post was not found");
         return;
       }
 

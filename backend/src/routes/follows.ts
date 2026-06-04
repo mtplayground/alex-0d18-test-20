@@ -6,6 +6,12 @@ import {
 } from "express";
 import { z } from "zod";
 import { getPrismaClient } from "../db/prisma.js";
+import {
+  sendError,
+  sendNotFound,
+  sendUnauthorized,
+  sendValidationError
+} from "../http/responses.js";
 import { requireAuth } from "../middleware/auth.js";
 import { followUser, unfollowUser } from "../services/followsService.js";
 
@@ -27,10 +33,7 @@ followsRouter.post(
       const parsed = followParamsSchema.safeParse(req.params);
 
       if (!parsed.success) {
-        res.status(400).json({
-          error: "Invalid follow request",
-          details: parsed.error.flatten().fieldErrors
-        });
+        sendValidationError(res, parsed.error, "Invalid follow request");
         return;
       }
 
@@ -38,9 +41,7 @@ followsRouter.post(
       const { followeeId } = parsed.data;
 
       if (!followerId) {
-        res.status(401).json({
-          error: "Missing authenticated user"
-        });
+        sendUnauthorized(res, "Missing authenticated user");
         return;
       }
 
@@ -51,16 +52,12 @@ followsRouter.post(
       });
 
       if (result.status === "self-follow") {
-        res.status(400).json({
-          error: "Cannot follow yourself"
-        });
+        sendError(res, 400, "SELF_FOLLOW", "Cannot follow yourself");
         return;
       }
 
       if (result.status === "followee-not-found") {
-        res.status(404).json({
-          error: "User to follow was not found"
-        });
+        sendNotFound(res, "User to follow was not found");
         return;
       }
 
@@ -82,10 +79,7 @@ followsRouter.delete(
       const parsed = followParamsSchema.safeParse(req.params);
 
       if (!parsed.success) {
-        res.status(400).json({
-          error: "Invalid unfollow request",
-          details: parsed.error.flatten().fieldErrors
-        });
+        sendValidationError(res, parsed.error, "Invalid unfollow request");
         return;
       }
 
@@ -93,9 +87,7 @@ followsRouter.delete(
       const { followeeId } = parsed.data;
 
       if (!followerId) {
-        res.status(401).json({
-          error: "Missing authenticated user"
-        });
+        sendUnauthorized(res, "Missing authenticated user");
         return;
       }
 
@@ -106,16 +98,12 @@ followsRouter.delete(
       });
 
       if (result.status === "self-unfollow") {
-        res.status(400).json({
-          error: "Cannot unfollow yourself"
-        });
+        sendError(res, 400, "SELF_UNFOLLOW", "Cannot unfollow yourself");
         return;
       }
 
       if (result.status === "relationship-not-found") {
-        res.status(404).json({
-          error: "Follow relationship was not found"
-        });
+        sendNotFound(res, "Follow relationship was not found");
         return;
       }
 

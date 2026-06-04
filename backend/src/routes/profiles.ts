@@ -6,6 +6,11 @@ import {
 } from "express";
 import { z } from "zod";
 import { getPrismaClient } from "../db/prisma.js";
+import {
+  sendNotFound,
+  sendUnauthorized,
+  sendValidationError
+} from "../http/responses.js";
 import { requireAuth } from "../middleware/auth.js";
 import { serializeUser } from "../services/authService.js";
 
@@ -55,10 +60,7 @@ function serializeProfilePost(post: {
 }
 
 function sendInvalidProfileRequest(res: Response, error: z.ZodError) {
-  res.status(400).json({
-    error: "Invalid profile request",
-    details: error.flatten().fieldErrors
-  });
+  sendValidationError(res, error, "Invalid profile request");
 }
 
 profilesRouter.get(
@@ -83,9 +85,7 @@ profilesRouter.get(
       const viewerId = req.auth?.user.googleSub;
 
       if (!viewerId) {
-        res.status(401).json({
-          error: "Missing authenticated user"
-        });
+        sendUnauthorized(res, "Missing authenticated user");
         return;
       }
 
@@ -177,9 +177,7 @@ profilesRouter.get(
       });
 
       if (!profile) {
-        res.status(404).json({
-          error: "User was not found"
-        });
+        sendNotFound(res, "User was not found");
         return;
       }
 

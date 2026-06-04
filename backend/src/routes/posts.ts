@@ -6,6 +6,11 @@ import {
 } from "express";
 import { getS3Env } from "../config/env.js";
 import { getPrismaClient } from "../db/prisma.js";
+import {
+  sendError,
+  sendUnauthorized,
+  sendValidationError
+} from "../http/responses.js";
 import { requireAuth } from "../middleware/auth.js";
 import { createPost, createPostSchema } from "../services/postsService.js";
 
@@ -19,19 +24,14 @@ postsRouter.post(
       const parsed = createPostSchema.safeParse(req.body);
 
       if (!parsed.success) {
-        res.status(400).json({
-          error: "Invalid post request",
-          details: parsed.error.flatten().fieldErrors
-        });
+        sendValidationError(res, parsed.error, "Invalid post request");
         return;
       }
 
       const authorId = req.auth?.user.googleSub;
 
       if (!authorId) {
-        res.status(401).json({
-          error: "Missing authenticated user"
-        });
+        sendUnauthorized(res, "Missing authenticated user");
         return;
       }
 
@@ -44,9 +44,12 @@ postsRouter.post(
       });
 
       if (result.status === "invalid-image-url") {
-        res.status(400).json({
-          error: "Image URL must reference an uploaded object"
-        });
+        sendError(
+          res,
+          400,
+          "INVALID_IMAGE_URL",
+          "Image URL must reference an uploaded object"
+        );
         return;
       }
 
