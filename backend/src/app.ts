@@ -5,6 +5,7 @@ import express, {
   type Response
 } from "express";
 import { authRouter } from "./routes/auth.js";
+import { meRouter } from "./routes/me.js";
 
 export function createApp() {
   const app = express();
@@ -14,6 +15,7 @@ export function createApp() {
   app.use(express.json({ limit: "1mb" }));
 
   app.use("/api/auth", authRouter);
+  app.use("/me", meRouter);
 
   app.get("/api/health", (_req: Request, res: Response) => {
     res.json({
