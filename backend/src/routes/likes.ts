@@ -7,16 +7,11 @@ import {
 import { z } from "zod";
 import { getPrismaClient } from "../db/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
+import { updatePostLike } from "../services/likesService.js";
 
 const likeParamsSchema = z.object({
   postId: z.string().trim().min(1)
 });
-
-type LikeResponse = {
-  liked: boolean;
-  postId: string;
-  likesCount: number;
-};
 
 export const likesRouter = Router();
 
@@ -53,45 +48,11 @@ likesRouter.post(
       }
 
       const { postId } = parsed.data;
-      const likeState = await getPrismaClient().$transaction(async (tx) => {
-        const post = await tx.post.findUnique({
-          where: {
-            id: postId
-          },
-          select: {
-            id: true
-          }
-        });
-
-        if (!post) {
-          return null;
-        }
-
-        await tx.like.upsert({
-          where: {
-            userId_postId: {
-              userId,
-              postId
-            }
-          },
-          update: {},
-          create: {
-            userId,
-            postId
-          }
-        });
-
-        const likesCount = await tx.like.count({
-          where: {
-            postId
-          }
-        });
-
-        return {
-          liked: true,
-          postId,
-          likesCount
-        } satisfies LikeResponse;
+      const likeState = await updatePostLike({
+        prisma: getPrismaClient(),
+        userId,
+        postId,
+        liked: true
       });
 
       if (!likeState) {
@@ -130,38 +91,11 @@ likesRouter.delete(
       }
 
       const { postId } = parsed.data;
-      const likeState = await getPrismaClient().$transaction(async (tx) => {
-        const post = await tx.post.findUnique({
-          where: {
-            id: postId
-          },
-          select: {
-            id: true
-          }
-        });
-
-        if (!post) {
-          return null;
-        }
-
-        await tx.like.deleteMany({
-          where: {
-            userId,
-            postId
-          }
-        });
-
-        const likesCount = await tx.like.count({
-          where: {
-            postId
-          }
-        });
-
-        return {
-          liked: false,
-          postId,
-          likesCount
-        } satisfies LikeResponse;
+      const likeState = await updatePostLike({
+        prisma: getPrismaClient(),
+        userId,
+        postId,
+        liked: false
       });
 
       if (!likeState) {

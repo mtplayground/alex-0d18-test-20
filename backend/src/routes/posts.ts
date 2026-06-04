@@ -4,49 +4,12 @@ import {
   type Request,
   type Response
 } from "express";
-import { z } from "zod";
 import { getS3Env } from "../config/env.js";
 import { getPrismaClient } from "../db/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
-
-const MAX_CAPTION_LENGTH = 2_200;
-
-const createPostSchema = z.object({
-  imageUrl: z.string().url(),
-  caption: z
-    .string()
-    .trim()
-    .max(MAX_CAPTION_LENGTH)
-    .optional()
-    .nullable()
-    .transform((value) => (value && value.length > 0 ? value : null))
-});
+import { createPost, createPostSchema } from "../services/postsService.js";
 
 export const postsRouter = Router();
-
-function getAllowedImageUrlPrefix(): string {
-  const env = getS3Env();
-  const publicBaseUrl = env.S3_PUBLIC_BASE_URL.replace(/\/$/, "");
-  return `${publicBaseUrl}/${env.S3_PREFIX}`;
-}
-
-function serializePost(post: {
-  id: string;
-  authorId: string;
-  imageUrl: string;
-  caption: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-}) {
-  return {
-    id: post.id,
-    authorId: post.authorId,
-    imageUrl: post.imageUrl,
-    caption: post.caption,
-    createdAt: post.createdAt.toISOString(),
-    updatedAt: post.updatedAt.toISOString()
-  };
-}
 
 postsRouter.post(
   "/",
@@ -72,23 +35,23 @@ postsRouter.post(
         return;
       }
 
-      if (!parsed.data.imageUrl.startsWith(getAllowedImageUrlPrefix())) {
+      const result = await createPost({
+        prisma: getPrismaClient(),
+        authorId,
+        imageUrl: parsed.data.imageUrl,
+        caption: parsed.data.caption,
+        s3Env: getS3Env()
+      });
+
+      if (result.status === "invalid-image-url") {
         res.status(400).json({
           error: "Image URL must reference an uploaded object"
         });
         return;
       }
 
-      const post = await getPrismaClient().post.create({
-        data: {
-          authorId,
-          imageUrl: parsed.data.imageUrl,
-          caption: parsed.data.caption
-        }
-      });
-
       res.status(201).json({
-        post: serializePost(post)
+        post: result.post
       });
     } catch (error) {
       next(error);

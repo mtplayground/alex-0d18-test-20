@@ -7,18 +7,16 @@ import {
 import { z } from "zod";
 import { getPrismaClient } from "../db/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
-import { serializeUser } from "../services/authService.js";
-
-const MAX_COMMENT_LENGTH = 1_000;
-const DEFAULT_COMMENT_LIMIT = 50;
-const MAX_COMMENT_LIMIT = 100;
+import {
+  DEFAULT_COMMENT_LIMIT,
+  MAX_COMMENT_LIMIT,
+  createComment,
+  createCommentSchema,
+  listComments
+} from "../services/commentsService.js";
 
 const commentParamsSchema = z.object({
   postId: z.string().trim().min(1)
-});
-
-const createCommentSchema = z.object({
-  content: z.string().trim().min(1).max(MAX_COMMENT_LENGTH)
 });
 
 const listCommentsQuerySchema = z.object({
@@ -35,26 +33,6 @@ export const commentsRouter = Router();
 
 function getAuthenticatedUserId(req: Request): string | null {
   return req.auth?.user.googleSub ?? null;
-}
-
-function serializeComment(comment: {
-  id: string;
-  postId: string;
-  authorId: string;
-  content: string;
-  createdAt: Date;
-  updatedAt: Date;
-  author: Parameters<typeof serializeUser>[0];
-}) {
-  return {
-    id: comment.id,
-    postId: comment.postId,
-    authorId: comment.authorId,
-    content: comment.content,
-    createdAt: comment.createdAt.toISOString(),
-    updatedAt: comment.updatedAt.toISOString(),
-    author: serializeUser(comment.author)
-  };
 }
 
 function sendInvalidCommentRequest(res: Response, error: z.ZodError) {
@@ -93,30 +71,11 @@ commentsRouter.post(
       }
 
       const { postId } = parsedParams.data;
-      const comment = await getPrismaClient().$transaction(async (tx) => {
-        const post = await tx.post.findUnique({
-          where: {
-            id: postId
-          },
-          select: {
-            id: true
-          }
-        });
-
-        if (!post) {
-          return null;
-        }
-
-        return await tx.comment.create({
-          data: {
-            postId,
-            authorId,
-            content: parsedBody.data.content
-          },
-          include: {
-            author: true
-          }
-        });
+      const comment = await createComment({
+        prisma: getPrismaClient(),
+        postId,
+        authorId,
+        content: parsedBody.data.content
       });
 
       if (!comment) {
@@ -127,7 +86,7 @@ commentsRouter.post(
       }
 
       res.status(201).json({
-        comment: serializeComment(comment)
+        comment
       });
     } catch (error) {
       next(error);
@@ -156,51 +115,11 @@ commentsRouter.get(
 
       const { postId } = parsedParams.data;
       const { limit, offset } = parsedQuery.data;
-      const page = await getPrismaClient().$transaction(async (tx) => {
-        const post = await tx.post.findUnique({
-          where: {
-            id: postId
-          },
-          select: {
-            id: true
-          }
-        });
-
-        if (!post) {
-          return null;
-        }
-
-        const comments = await tx.comment.findMany({
-          where: {
-            postId
-          },
-          include: {
-            author: true
-          },
-          orderBy: [
-            {
-              createdAt: "desc"
-            },
-            {
-              id: "desc"
-            }
-          ],
-          skip: offset,
-          take: limit + 1
-        });
-
-        const pageItems = comments.slice(0, limit);
-        const hasMore = comments.length > limit;
-
-        return {
-          comments: pageItems.map(serializeComment),
-          pagination: {
-            limit,
-            offset,
-            nextOffset: hasMore ? offset + pageItems.length : null,
-            hasMore
-          }
-        };
+      const page = await listComments({
+        prisma: getPrismaClient(),
+        postId,
+        limit,
+        offset
       });
 
       if (!page) {
