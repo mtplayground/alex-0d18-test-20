@@ -3,10 +3,12 @@ import { useEffect, useRef, useState } from "react";
 import { NavLink, Route, Routes, useNavigate } from "react-router-dom";
 import { useAuth } from "./contexts/useAuth";
 import type { ApiUser } from "./lib/api";
+import { CreatePostPage } from "./pages/CreatePostPage";
 
 const navItems = [
   { label: "Home", to: "/", end: true },
   { label: "Explore", to: "/explore" },
+  { label: "Create", to: "/posts/new" },
   { label: "Profile", to: "/profile" }
 ];
 
@@ -45,6 +47,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<HomeRoute />} />
           <Route path="/explore" element={<ExploreRoute />} />
+          <Route path="/posts/new" element={<CreatePostPage />} />
           <Route path="/profile" element={<ProfileRoute />} />
           <Route path="/auth/callback" element={<AuthCallbackRoute />} />
           <Route path="*" element={<NotFoundRoute />} />
