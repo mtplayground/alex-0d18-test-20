@@ -1,26 +1,20 @@
 import { PrismaClient } from "@prisma/client";
+import { getEnv } from "../config/env.js";
 
 let prisma: PrismaClient | null = null;
 
 export function getDatabaseUrl(): string {
-  const databaseUrl = process.env.DATABASE_URL;
-
-  if (!databaseUrl) {
-    throw new Error("DATABASE_URL is required to connect to PostgreSQL");
-  }
-
-  return databaseUrl;
+  return getEnv().DATABASE_URL;
 }
 
 export function getPrismaClient(): PrismaClient {
   getDatabaseUrl();
 
   if (!prisma) {
+    const env = getEnv();
+
     prisma = new PrismaClient({
-      log:
-        process.env.NODE_ENV === "production"
-          ? ["warn", "error"]
-          : ["warn", "error"]
+      log: env.NODE_ENV === "production" ? ["warn", "error"] : ["warn", "error"]
     });
   }
 

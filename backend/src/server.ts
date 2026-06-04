@@ -1,15 +1,11 @@
 import { createApp } from "./app.js";
+import { getEnv } from "./config/env.js";
 
-const host = process.env.HOST || "0.0.0.0";
-const port = Number.parseInt(process.env.PORT || "8080", 10);
-
-if (!Number.isInteger(port) || port <= 0 || port > 65535) {
-  throw new Error(`Invalid PORT value: ${process.env.PORT}`);
-}
+const env = getEnv();
 
 const app = createApp();
-const server = app.listen(port, host, () => {
-  console.log(`Backend listening on http://${host}:${port}`);
+const server = app.listen(env.PORT, env.HOST, () => {
+  console.log(`Backend listening on http://${env.HOST}:${env.PORT}`);
 });
 
 server.on("error", (err: NodeJS.ErrnoException) => {
