@@ -6,6 +6,7 @@ import {
   type FormEvent,
   type ReactNode
 } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/useAuth";
 import {
   createComment,
@@ -400,14 +401,22 @@ function PostCard({
     <article className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
       <header className="flex min-w-0 items-center justify-between gap-4 p-4">
         <div className="flex min-w-0 items-center gap-3">
-          <UserAvatar
-            avatarUrl={post.author.avatarUrl}
-            displayName={displayName}
-          />
+          <Link
+            to={`/profile/${encodeURIComponent(post.authorId)}`}
+            className="shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+          >
+            <UserAvatar
+              avatarUrl={post.author.avatarUrl}
+              displayName={displayName}
+            />
+          </Link>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-zinc-950">
+            <Link
+              to={`/profile/${encodeURIComponent(post.authorId)}`}
+              className="block truncate text-sm font-semibold text-zinc-950 transition-colors hover:text-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+            >
               {displayName}
-            </p>
+            </Link>
             <p className="truncate text-xs text-zinc-500">
               {post.author.email}
             </p>

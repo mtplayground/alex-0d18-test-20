@@ -5,6 +5,7 @@ import { useAuth } from "./contexts/useAuth";
 import type { ApiUser } from "./lib/api";
 import { CreatePostPage } from "./pages/CreatePostPage";
 import { FeedPageView } from "./pages/FeedPage";
+import { ProfilePage } from "./pages/ProfilePage";
 
 const navItems = [
   { label: "Home", to: "/", end: true },
@@ -49,7 +50,8 @@ export default function App() {
           <Route path="/" element={<FeedPageView />} />
           <Route path="/explore" element={<ExploreRoute />} />
           <Route path="/posts/new" element={<CreatePostPage />} />
-          <Route path="/profile" element={<ProfileRoute />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profile/:userId" element={<ProfilePage />} />
           <Route path="/auth/callback" element={<AuthCallbackRoute />} />
           <Route path="*" element={<NotFoundRoute />} />
         </Routes>
@@ -156,16 +158,6 @@ function ExploreRoute() {
     <PageFrame eyebrow="Explore" title="Discover people">
       <div className="rounded-lg border border-dashed border-zinc-300 bg-white p-8 text-sm text-zinc-600">
         No people to show yet.
-      </div>
-    </PageFrame>
-  );
-}
-
-function ProfileRoute() {
-  return (
-    <PageFrame eyebrow="Profile" title="Your profile">
-      <div className="rounded-lg border border-dashed border-zinc-300 bg-white p-8 text-sm text-zinc-600">
-        Sign in to view profile details.
       </div>
     </PageFrame>
   );

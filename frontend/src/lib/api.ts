@@ -28,8 +28,31 @@ export type ApiFeedPost = ApiPost & {
   viewerHasLiked: boolean;
 };
 
+export type ApiProfilePost = ApiPost & {
+  likesCount: number;
+  commentsCount: number;
+  viewerHasLiked: boolean;
+};
+
 export type FeedPage = {
   posts: ApiFeedPost[];
+  pagination: {
+    limit: number;
+    offset: number;
+    nextOffset: number | null;
+    hasMore: boolean;
+  };
+};
+
+export type ApiProfile = {
+  user: ApiUser;
+  stats: {
+    postsCount: number;
+    followingCount: number;
+    followersCount: number;
+    viewerIsFollowing: boolean;
+  };
+  posts: ApiProfilePost[];
   pagination: {
     limit: number;
     offset: number;
@@ -204,6 +227,36 @@ export async function fetchFeed({
   });
 
   return await parseJsonResponse<FeedPage>(response);
+}
+
+export async function fetchProfile({
+  token,
+  userId,
+  limit = 20,
+  offset = 0
+}: {
+  token: string;
+  userId: string;
+  limit?: number;
+  offset?: number;
+}): Promise<ApiProfile> {
+  const params = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset)
+  });
+  const response = await fetch(
+    getApiUrl(
+      `/api/profiles/${encodeURIComponent(userId)}?${params.toString()}`
+    ),
+    {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  const body = await parseJsonResponse<{ profile: ApiProfile }>(response);
+  return body.profile;
 }
 
 export async function followUser({
