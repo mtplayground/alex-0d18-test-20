@@ -6,13 +6,10 @@ import {
 } from "express";
 import { getS3Env } from "../config/env.js";
 import { getPrismaClient } from "../db/prisma.js";
-import {
-  sendError,
-  sendUnauthorized,
-  sendValidationError
-} from "../http/responses.js";
+import { sendError } from "../http/responses.js";
 import { requireAuth } from "../middleware/auth.js";
 import { createPost, createPostSchema } from "../services/postsService.js";
+import { getAuthenticatedUserId, parseRequest } from "./helpers.js";
 
 export const postsRouter = Router();
 
@@ -21,25 +18,28 @@ postsRouter.post(
   requireAuth,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const parsed = createPostSchema.safeParse(req.body);
+      const body = parseRequest({
+        schema: createPostSchema,
+        input: req.body,
+        res,
+        message: "Invalid post request"
+      });
 
-      if (!parsed.success) {
-        sendValidationError(res, parsed.error, "Invalid post request");
+      if (!body) {
         return;
       }
 
-      const authorId = req.auth?.user.googleSub;
+      const authorId = getAuthenticatedUserId(req, res);
 
       if (!authorId) {
-        sendUnauthorized(res, "Missing authenticated user");
         return;
       }
 
       const result = await createPost({
         prisma: getPrismaClient(),
         authorId,
-        imageUrl: parsed.data.imageUrl,
-        caption: parsed.data.caption,
+        imageUrl: body.imageUrl,
+        caption: body.caption,
         s3Env: getS3Env()
       });
 

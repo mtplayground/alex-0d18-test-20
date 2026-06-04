@@ -6,13 +6,10 @@ import {
 } from "express";
 import { z } from "zod";
 import { getPrismaClient } from "../db/prisma.js";
-import {
-  sendNotFound,
-  sendUnauthorized,
-  sendValidationError
-} from "../http/responses.js";
+import { sendNotFound } from "../http/responses.js";
 import { requireAuth } from "../middleware/auth.js";
 import { serializeUser } from "../services/authService.js";
+import { getAuthenticatedUserId, parseRequest } from "./helpers.js";
 
 const DEFAULT_PROFILE_POST_LIMIT = 20;
 const MAX_PROFILE_POST_LIMIT = 50;
@@ -59,38 +56,41 @@ function serializeProfilePost(post: {
   };
 }
 
-function sendInvalidProfileRequest(res: Response, error: z.ZodError) {
-  sendValidationError(res, error, "Invalid profile request");
-}
-
 profilesRouter.get(
   "/:userId",
   requireAuth,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const parsedParams = profileParamsSchema.safeParse(req.params);
+      const params = parseRequest({
+        schema: profileParamsSchema,
+        input: req.params,
+        res,
+        message: "Invalid profile request"
+      });
 
-      if (!parsedParams.success) {
-        sendInvalidProfileRequest(res, parsedParams.error);
+      if (!params) {
         return;
       }
 
-      const parsedQuery = profileQuerySchema.safeParse(req.query);
+      const query = parseRequest({
+        schema: profileQuerySchema,
+        input: req.query,
+        res,
+        message: "Invalid profile request"
+      });
 
-      if (!parsedQuery.success) {
-        sendInvalidProfileRequest(res, parsedQuery.error);
+      if (!query) {
         return;
       }
 
-      const viewerId = req.auth?.user.googleSub;
+      const viewerId = getAuthenticatedUserId(req, res);
 
       if (!viewerId) {
-        sendUnauthorized(res, "Missing authenticated user");
         return;
       }
 
-      const { userId } = parsedParams.data;
-      const { limit, offset } = parsedQuery.data;
+      const { userId } = params;
+      const { limit, offset } = query;
       const profile = await getPrismaClient().$transaction(async (tx) => {
         const user = await tx.user.findUnique({
           where: {

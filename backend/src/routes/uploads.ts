@@ -5,9 +5,9 @@ import {
   type Response
 } from "express";
 import { z } from "zod";
-import { sendUnauthorized, sendValidationError } from "../http/responses.js";
 import { requireAuth } from "../middleware/auth.js";
 import { createPresignedUploadUrl } from "../services/storageService.js";
+import { getAuthenticatedUserId, parseRequest } from "./helpers.js";
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 const allowedImageTypes = [
@@ -30,24 +30,27 @@ uploadsRouter.post(
   requireAuth,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const parsed = presignedUploadSchema.safeParse(req.body);
+      const body = parseRequest({
+        schema: presignedUploadSchema,
+        input: req.body,
+        res,
+        message: "Invalid upload request"
+      });
 
-      if (!parsed.success) {
-        sendValidationError(res, parsed.error, "Invalid upload request");
+      if (!body) {
         return;
       }
 
-      const userId = req.auth?.user.googleSub;
+      const userId = getAuthenticatedUserId(req, res);
 
       if (!userId) {
-        sendUnauthorized(res, "Missing authenticated user");
         return;
       }
 
       const upload = await createPresignedUploadUrl({
         userId,
-        contentType: parsed.data.contentType,
-        contentLength: parsed.data.contentLength
+        contentType: body.contentType,
+        contentLength: body.contentLength
       });
 
       res.status(201).json(upload);

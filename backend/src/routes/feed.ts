@@ -6,13 +6,13 @@ import {
 } from "express";
 import { z } from "zod";
 import { getPrismaClient } from "../db/prisma.js";
-import { sendUnauthorized, sendValidationError } from "../http/responses.js";
 import { requireAuth } from "../middleware/auth.js";
 import {
   DEFAULT_FEED_LIMIT,
   MAX_FEED_LIMIT,
   listFeedPosts
 } from "../services/feedService.js";
+import { getAuthenticatedUserId, parseRequest } from "./helpers.js";
 
 const feedQuerySchema = z.object({
   limit: z.coerce
@@ -31,21 +31,24 @@ feedRouter.get(
   requireAuth,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const parsed = feedQuerySchema.safeParse(req.query);
+      const query = parseRequest({
+        schema: feedQuerySchema,
+        input: req.query,
+        res,
+        message: "Invalid feed request"
+      });
 
-      if (!parsed.success) {
-        sendValidationError(res, parsed.error, "Invalid feed request");
+      if (!query) {
         return;
       }
 
-      const viewerId = req.auth?.user.googleSub;
+      const viewerId = getAuthenticatedUserId(req, res);
 
       if (!viewerId) {
-        sendUnauthorized(res, "Missing authenticated user");
         return;
       }
 
-      const { limit, offset } = parsed.data;
+      const { limit, offset } = query;
       const page = await listFeedPosts({
         prisma: getPrismaClient(),
         viewerId,

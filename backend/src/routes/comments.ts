@@ -6,11 +6,7 @@ import {
 } from "express";
 import { z } from "zod";
 import { getPrismaClient } from "../db/prisma.js";
-import {
-  sendNotFound,
-  sendUnauthorized,
-  sendValidationError
-} from "../http/responses.js";
+import { sendNotFound } from "../http/responses.js";
 import { requireAuth } from "../middleware/auth.js";
 import {
   DEFAULT_COMMENT_LIMIT,
@@ -19,6 +15,7 @@ import {
   createCommentSchema,
   listComments
 } from "../services/commentsService.js";
+import { getAuthenticatedUserId, parseRequest } from "./helpers.js";
 
 const commentParamsSchema = z.object({
   postId: z.string().trim().min(1)
@@ -36,46 +33,45 @@ const listCommentsQuerySchema = z.object({
 
 export const commentsRouter = Router();
 
-function getAuthenticatedUserId(req: Request): string | null {
-  return req.auth?.user.googleSub ?? null;
-}
-
-function sendInvalidCommentRequest(res: Response, error: z.ZodError) {
-  sendValidationError(res, error, "Invalid comment request");
-}
-
 commentsRouter.post(
   "/:postId",
   requireAuth,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const parsedParams = commentParamsSchema.safeParse(req.params);
+      const params = parseRequest({
+        schema: commentParamsSchema,
+        input: req.params,
+        res,
+        message: "Invalid comment request"
+      });
 
-      if (!parsedParams.success) {
-        sendInvalidCommentRequest(res, parsedParams.error);
+      if (!params) {
         return;
       }
 
-      const parsedBody = createCommentSchema.safeParse(req.body);
+      const body = parseRequest({
+        schema: createCommentSchema,
+        input: req.body,
+        res,
+        message: "Invalid comment request"
+      });
 
-      if (!parsedBody.success) {
-        sendInvalidCommentRequest(res, parsedBody.error);
+      if (!body) {
         return;
       }
 
-      const authorId = getAuthenticatedUserId(req);
+      const authorId = getAuthenticatedUserId(req, res);
 
       if (!authorId) {
-        sendUnauthorized(res, "Missing authenticated user");
         return;
       }
 
-      const { postId } = parsedParams.data;
+      const { postId } = params;
       const comment = await createComment({
         prisma: getPrismaClient(),
         postId,
         authorId,
-        content: parsedBody.data.content
+        content: body.content
       });
 
       if (!comment) {
@@ -97,22 +93,30 @@ commentsRouter.get(
   requireAuth,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const parsedParams = commentParamsSchema.safeParse(req.params);
+      const params = parseRequest({
+        schema: commentParamsSchema,
+        input: req.params,
+        res,
+        message: "Invalid comment request"
+      });
 
-      if (!parsedParams.success) {
-        sendInvalidCommentRequest(res, parsedParams.error);
+      if (!params) {
         return;
       }
 
-      const parsedQuery = listCommentsQuerySchema.safeParse(req.query);
+      const query = parseRequest({
+        schema: listCommentsQuerySchema,
+        input: req.query,
+        res,
+        message: "Invalid comment request"
+      });
 
-      if (!parsedQuery.success) {
-        sendInvalidCommentRequest(res, parsedQuery.error);
+      if (!query) {
         return;
       }
 
-      const { postId } = parsedParams.data;
-      const { limit, offset } = parsedQuery.data;
+      const { postId } = params;
+      const { limit, offset } = query;
       const page = await listComments({
         prisma: getPrismaClient(),
         postId,
