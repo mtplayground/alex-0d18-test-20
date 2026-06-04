@@ -1,7 +1,7 @@
 import { createApp } from "./app.js";
-import { getEnv } from "./config/env.js";
+import { getRuntimeConfig } from "./config/env.js";
 
-const env = getEnv();
+const env = getRuntimeConfig().app;
 
 const app = createApp();
 const server = app.listen(env.PORT, env.HOST, () => {

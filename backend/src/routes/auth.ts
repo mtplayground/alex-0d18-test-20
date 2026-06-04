@@ -5,7 +5,7 @@ import {
   type Response
 } from "express";
 import { z } from "zod";
-import { getAuthEnv } from "../config/env.js";
+import { getRuntimeConfig } from "../config/env.js";
 import { sendUnauthorized } from "../http/responses.js";
 import {
   issueAppJwt,
@@ -52,7 +52,7 @@ function getMctaiSessionCookie(req: Request): string | undefined {
 
 authRouter.get("/login", (_req: Request, res: Response, next: NextFunction) => {
   try {
-    const authEnv = getAuthEnv();
+    const authEnv = getRuntimeConfig().auth;
     const loginUrl = new URL("/login", authEnv.MCTAI_AUTH_URL);
     const returnTo = getFrontendReturnTo(
       _req,

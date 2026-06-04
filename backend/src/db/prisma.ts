@@ -1,17 +1,17 @@
 import { PrismaClient } from "@prisma/client";
-import { getEnv } from "../config/env.js";
+import { getRuntimeConfig } from "../config/env.js";
 
 let prisma: PrismaClient | null = null;
 
 export function getDatabaseUrl(): string {
-  return getEnv().DATABASE_URL;
+  return getRuntimeConfig().app.DATABASE_URL;
 }
 
 export function getPrismaClient(): PrismaClient {
   getDatabaseUrl();
 
   if (!prisma) {
-    const env = getEnv();
+    const env = getRuntimeConfig().app;
 
     prisma = new PrismaClient({
       log: env.NODE_ENV === "production" ? ["warn", "error"] : ["warn", "error"]
