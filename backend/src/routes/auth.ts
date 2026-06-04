@@ -4,7 +4,9 @@ import {
   type Request,
   type Response
 } from "express";
+import { z } from "zod";
 import { getAuthEnv } from "../config/env.js";
+import { sendUnauthorized } from "../http/responses.js";
 import {
   issueAppJwt,
   serializeUser,
@@ -14,18 +16,24 @@ import {
 
 export const authRouter = Router();
 
+const loginQuerySchema = z
+  .object({
+    return_to: z.string().url().optional()
+  })
+  .passthrough();
+
 function getFrontendReturnTo(
   req: Request,
   allowedOrigin: string
 ): string | null {
-  const returnTo = req.query.return_to;
+  const parsed = loginQuerySchema.safeParse(req.query);
 
-  if (typeof returnTo !== "string") {
+  if (!parsed.success || !parsed.data.return_to) {
     return null;
   }
 
   try {
-    const returnToUrl = new URL(returnTo);
+    const returnToUrl = new URL(parsed.data.return_to);
 
     if (returnToUrl.origin !== allowedOrigin) {
       return null;
@@ -70,9 +78,7 @@ authRouter.get(
       const sessionToken = getMctaiSessionCookie(req);
 
       if (!sessionToken) {
-        res.status(401).json({
-          error: "Missing authenticated session"
-        });
+        sendUnauthorized(res, "Missing authenticated session");
         return;
       }
 

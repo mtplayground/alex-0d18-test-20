@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import type { NextFunction, Request, Response } from "express";
 import { getJwtEnv } from "../config/env.js";
 import { getPrismaClient } from "../db/prisma.js";
+import { sendUnauthorized } from "../http/responses.js";
 import { serializeUser } from "../services/authService.js";
 
 export type AppJwtClaims = JwtPayload & {
@@ -59,9 +60,7 @@ export async function requireAuth(
     const token = getBearerToken(req);
 
     if (!token) {
-      res.status(401).json({
-        error: "Missing bearer token"
-      });
+      sendUnauthorized(res, "Missing bearer token");
       return;
     }
 
@@ -70,9 +69,7 @@ export async function requireAuth(
     try {
       claims = verifyAppJwt(token);
     } catch {
-      res.status(401).json({
-        error: "Invalid bearer token"
-      });
+      sendUnauthorized(res, "Invalid bearer token");
       return;
     }
 
@@ -83,9 +80,7 @@ export async function requireAuth(
     });
 
     if (!user) {
-      res.status(401).json({
-        error: "User not found"
-      });
+      sendUnauthorized(res, "User not found");
       return;
     }
 
