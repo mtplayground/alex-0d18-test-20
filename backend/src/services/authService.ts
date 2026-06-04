@@ -23,6 +23,25 @@ export type PublicUser = {
   avatarUrl: string | null;
 };
 
+export function buildUserUpsertArgsFromClaims(claims: VerifiedAuthClaims) {
+  const userData = {
+    email: claims.email,
+    name: claims.name ?? null,
+    avatarUrl: claims.picture ?? null
+  };
+
+  return {
+    where: {
+      googleSub: claims.sub
+    },
+    update: userData,
+    create: {
+      googleSub: claims.sub,
+      ...userData
+    }
+  };
+}
+
 const jwksClients = new Map<string, JwksClient>();
 
 function getJwksClient(jwksUri: string): JwksClient {
@@ -140,22 +159,7 @@ export async function upsertUserFromClaims(
 ): Promise<User> {
   const prisma = getPrismaClient();
 
-  return await prisma.user.upsert({
-    where: {
-      googleSub: claims.sub
-    },
-    update: {
-      email: claims.email,
-      name: claims.name ?? null,
-      avatarUrl: claims.picture ?? null
-    },
-    create: {
-      googleSub: claims.sub,
-      email: claims.email,
-      name: claims.name ?? null,
-      avatarUrl: claims.picture ?? null
-    }
-  });
+  return await prisma.user.upsert(buildUserUpsertArgsFromClaims(claims));
 }
 
 export function issueAppJwt(user: User): string {

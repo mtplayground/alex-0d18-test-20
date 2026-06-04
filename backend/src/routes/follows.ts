@@ -7,6 +7,7 @@ import {
 import { z } from "zod";
 import { getPrismaClient } from "../db/prisma.js";
 import { requireAuth } from "../middleware/auth.js";
+import { followUser, unfollowUser } from "../services/followsService.js";
 
 const followParamsSchema = z.object({
   followeeId: z.string().trim().min(1)
@@ -16,19 +17,6 @@ export const followsRouter = Router();
 
 function getAuthenticatedUserId(req: Request): string | null {
   return req.auth?.user.googleSub ?? null;
-}
-
-async function ensureFolloweeExists(followeeId: string): Promise<boolean> {
-  const followee = await getPrismaClient().user.findUnique({
-    where: {
-      googleSub: followeeId
-    },
-    select: {
-      googleSub: true
-    }
-  });
-
-  return Boolean(followee);
 }
 
 followsRouter.post(
@@ -56,37 +44,29 @@ followsRouter.post(
         return;
       }
 
-      if (followerId === followeeId) {
+      const result = await followUser({
+        prisma: getPrismaClient(),
+        followerId,
+        followeeId
+      });
+
+      if (result.status === "self-follow") {
         res.status(400).json({
           error: "Cannot follow yourself"
         });
         return;
       }
 
-      if (!(await ensureFolloweeExists(followeeId))) {
+      if (result.status === "followee-not-found") {
         res.status(404).json({
           error: "User to follow was not found"
         });
         return;
       }
 
-      await getPrismaClient().follow.upsert({
-        where: {
-          followerId_followeeId: {
-            followerId,
-            followeeId
-          }
-        },
-        update: {},
-        create: {
-          followerId,
-          followeeId
-        }
-      });
-
       res.json({
         following: true,
-        followeeId
+        followeeId: result.followeeId
       });
     } catch (error) {
       next(error);
@@ -119,21 +99,20 @@ followsRouter.delete(
         return;
       }
 
-      if (followerId === followeeId) {
+      const result = await unfollowUser({
+        prisma: getPrismaClient(),
+        followerId,
+        followeeId
+      });
+
+      if (result.status === "self-unfollow") {
         res.status(400).json({
           error: "Cannot unfollow yourself"
         });
         return;
       }
 
-      const deleted = await getPrismaClient().follow.deleteMany({
-        where: {
-          followerId,
-          followeeId
-        }
-      });
-
-      if (deleted.count === 0) {
+      if (result.status === "relationship-not-found") {
         res.status(404).json({
           error: "Follow relationship was not found"
         });
@@ -142,7 +121,7 @@ followsRouter.delete(
 
       res.json({
         following: false,
-        followeeId
+        followeeId: result.followeeId
       });
     } catch (error) {
       next(error);
