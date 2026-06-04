@@ -21,6 +21,20 @@ export type ApiPost = {
   updatedAt: string;
 };
 
+export type ApiFeedPost = ApiPost & {
+  author: ApiUser;
+};
+
+export type FeedPage = {
+  posts: ApiFeedPost[];
+  pagination: {
+    limit: number;
+    offset: number;
+    nextOffset: number | null;
+    hasMore: boolean;
+  };
+};
+
 export type PresignedUpload = {
   uploadUrl: string;
   method: "PUT";
@@ -139,4 +153,66 @@ export async function createPost({
 
   const body = await parseJsonResponse<{ post: ApiPost }>(response);
   return body.post;
+}
+
+export async function fetchFeed({
+  token,
+  limit = 20,
+  offset = 0
+}: {
+  token: string;
+  limit?: number;
+  offset?: number;
+}): Promise<FeedPage> {
+  const params = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset)
+  });
+  const response = await fetch(getApiUrl(`/api/feed?${params.toString()}`), {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  return await parseJsonResponse<FeedPage>(response);
+}
+
+export async function followUser({
+  token,
+  userId
+}: {
+  token: string;
+  userId: string;
+}): Promise<void> {
+  const response = await fetch(
+    getApiUrl(`/api/follows/${encodeURIComponent(userId)}`),
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  await parseJsonResponse<unknown>(response);
+}
+
+export async function unfollowUser({
+  token,
+  userId
+}: {
+  token: string;
+  userId: string;
+}): Promise<void> {
+  const response = await fetch(
+    getApiUrl(`/api/follows/${encodeURIComponent(userId)}`),
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    }
+  );
+
+  await parseJsonResponse<unknown>(response);
 }

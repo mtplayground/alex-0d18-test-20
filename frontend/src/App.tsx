@@ -4,6 +4,7 @@ import { NavLink, Route, Routes, useNavigate } from "react-router-dom";
 import { useAuth } from "./contexts/useAuth";
 import type { ApiUser } from "./lib/api";
 import { CreatePostPage } from "./pages/CreatePostPage";
+import { FeedPageView } from "./pages/FeedPage";
 
 const navItems = [
   { label: "Home", to: "/", end: true },
@@ -45,7 +46,7 @@ export default function App() {
 
       <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
         <Routes>
-          <Route path="/" element={<HomeRoute />} />
+          <Route path="/" element={<FeedPageView />} />
           <Route path="/explore" element={<ExploreRoute />} />
           <Route path="/posts/new" element={<CreatePostPage />} />
           <Route path="/profile" element={<ProfileRoute />} />
@@ -147,16 +148,6 @@ function PageFrame({
       </div>
       {children}
     </section>
-  );
-}
-
-function HomeRoute() {
-  return (
-    <PageFrame eyebrow="Home" title="Latest posts">
-      <div className="rounded-lg border border-dashed border-zinc-300 bg-white p-8 text-sm text-zinc-600">
-        No posts yet.
-      </div>
-    </PageFrame>
   );
 }
 
