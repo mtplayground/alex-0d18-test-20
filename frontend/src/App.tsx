@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
-import { NavLink, Route, Routes } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { NavLink, Route, Routes, useNavigate } from "react-router-dom";
+import { useAuth } from "./contexts/useAuth";
 
 const navItems = [
   { label: "Home", to: "/", end: true },
@@ -34,12 +36,7 @@ export default function App() {
             </nav>
           </div>
 
-          <button
-            type="button"
-            className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-900 shadow-sm transition-colors hover:border-zinc-400 hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
-          >
-            Sign in
-          </button>
+          <AuthButton />
         </div>
       </header>
 
@@ -48,10 +45,27 @@ export default function App() {
           <Route path="/" element={<HomeRoute />} />
           <Route path="/explore" element={<ExploreRoute />} />
           <Route path="/profile" element={<ProfileRoute />} />
+          <Route path="/auth/callback" element={<AuthCallbackRoute />} />
           <Route path="*" element={<NotFoundRoute />} />
         </Routes>
       </main>
     </div>
+  );
+}
+
+function AuthButton() {
+  const { signIn, signOut, status } = useAuth();
+  const isAuthenticated = status === "authenticated";
+
+  return (
+    <button
+      type="button"
+      onClick={isAuthenticated ? signOut : signIn}
+      disabled={status === "loading"}
+      className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-900 shadow-sm transition-colors hover:border-zinc-400 hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      {isAuthenticated ? "Sign out" : "Sign in"}
+    </button>
   );
 }
 
@@ -116,6 +130,37 @@ function NotFoundRoute() {
       >
         Go home
       </NavLink>
+    </PageFrame>
+  );
+}
+
+function AuthCallbackRoute() {
+  const { completeSignIn } = useAuth();
+  const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+  const hasCompleted = useRef(false);
+
+  useEffect(() => {
+    if (hasCompleted.current) {
+      return;
+    }
+
+    hasCompleted.current = true;
+
+    void completeSignIn()
+      .then(() => {
+        navigate("/", { replace: true });
+      })
+      .catch(() => {
+        setError("Sign in failed. Try again.");
+      });
+  }, [completeSignIn, navigate]);
+
+  return (
+    <PageFrame eyebrow="Sign in" title="Completing sign in">
+      <div className="rounded-lg border border-dashed border-zinc-300 bg-white p-8 text-sm text-zinc-600">
+        {error ?? "One moment."}
+      </div>
     </PageFrame>
   );
 }

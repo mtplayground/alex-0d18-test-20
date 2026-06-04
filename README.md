@@ -27,3 +27,4 @@ Prisma is configured for PostgreSQL via `DATABASE_URL`.
 Runtime configuration is documented in `.env.example`.
 Authentication routes are mounted under `/api/auth`.
 `GET /me` returns the current user for authenticated bearer tokens.
+The frontend stores the app JWT in local storage after `/auth/callback`.
