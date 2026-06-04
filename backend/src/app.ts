@@ -7,6 +7,7 @@ import express, {
 import { authRouter } from "./routes/auth.js";
 import { feedRouter } from "./routes/feed.js";
 import { followsRouter } from "./routes/follows.js";
+import { likesRouter } from "./routes/likes.js";
 import { meRouter } from "./routes/me.js";
 import { postsRouter } from "./routes/posts.js";
 import { uploadsRouter } from "./routes/uploads.js";
@@ -21,6 +22,7 @@ export function createApp() {
   app.use("/api/auth", authRouter);
   app.use("/api/feed", feedRouter);
   app.use("/api/follows", followsRouter);
+  app.use("/api/likes", likesRouter);
   app.use("/api/posts", postsRouter);
   app.use("/api/uploads", uploadsRouter);
   app.use("/me", meRouter);
