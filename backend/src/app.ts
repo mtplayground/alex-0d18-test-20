@@ -5,6 +5,7 @@ import express, {
   type Response
 } from "express";
 import { authRouter } from "./routes/auth.js";
+import { feedRouter } from "./routes/feed.js";
 import { followsRouter } from "./routes/follows.js";
 import { meRouter } from "./routes/me.js";
 import { postsRouter } from "./routes/posts.js";
@@ -18,6 +19,7 @@ export function createApp() {
   app.use(express.json({ limit: "1mb" }));
 
   app.use("/api/auth", authRouter);
+  app.use("/api/feed", feedRouter);
   app.use("/api/follows", followsRouter);
   app.use("/api/posts", postsRouter);
   app.use("/api/uploads", uploadsRouter);
