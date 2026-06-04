@@ -1,58 +1,64 @@
 # alex-0d18-test-20 Product Snapshot
 
-`alex-0d18-test-20` is a self-hostable social image-sharing app. It lets authenticated users upload images, publish posts, follow other users, browse a personalized feed, like posts, comment, and view profile pages with post grids and social counts.
+`alex-0d18-test-20` is a social image-sharing app. Authenticated users can upload images, publish posts, follow people, browse a personalized feed, like and comment on posts, and view profile pages with social counts and post grids.
 
 ## Current Features
 
-- myClawTeam auth-service sign-in with an app-issued JWT after `/auth/callback`.
-- User persistence in PostgreSQL, keyed by the auth provider subject.
-- Presigned S3-compatible uploads for post images, with object keys stored under the configured `S3_PREFIX`.
-- Post creation with image URL and optional caption.
-- Follow and unfollow endpoints that prevent self-follow and duplicate follows.
-- Home feed showing followed users' posts in reverse chronological paginated order.
-- Like and unlike endpoints returning current like counts.
-- Comment creation and paginated comment listing.
-- User profile endpoint and frontend page with avatar, display name, follow/unfollow action, follower/following counts, and post grid.
-- React frontend pages for feed, create post, profile, auth callback, and basic navigation.
-- Backend service tests plus an API-level end-to-end test covering login, post creation, follow, feed, like, and comment flow.
+- Sign-in through the myClawTeam auth service, followed by an app-issued bearer JWT for API calls.
+- PostgreSQL-backed users, posts, follows, likes, and comments.
+- S3-compatible presigned upload URLs for post images, with object keys kept under the configured `S3_PREFIX`.
+- Feed, profile, comments, and social endpoints with validated pagination.
+- Follow/unfollow, like/unlike, post creation, comment creation, and comment listing.
+- React pages for feed, creating posts, profiles, auth callback, and shared navigation.
+- Shared frontend UI components for post cards, profile grids/headers, comments, avatars, and follow buttons.
 
 ## Architecture
 
 - Monorepo with `frontend/` and `backend/` npm workspaces.
 - Frontend: Vite, React, React Router, Tailwind CSS.
+- Frontend API access is split into domain clients: `authApi`, `postsApi`, `feedApi`, `profilesApi`, and `socialApi`, with shared HTTP helpers in `frontend/src/lib/api/http.ts`.
 - Backend: Express, TypeScript, Prisma, Zod, JWT/JWKS verification, AWS SDK v3 for S3-compatible uploads.
-- Database: PostgreSQL only, via Prisma and `DATABASE_URL`.
-- Runtime object storage: S3-compatible storage only; no local disk, JSON files, SQLite, or in-memory persistence for durable state.
-- Production build serves the compiled React app from `frontend/dist` through the backend after all `/api/*` routes.
+- Backend route helpers centralize authenticated-user extraction and Zod validation/error response handling.
+- Backend services own Prisma access and use shared helpers for result shapes and pagination.
+- Runtime env validation remains in `backend/src/config/env.ts`; backend code should use the exported `getRuntimeConfig()` aggregate accessor.
+- Production builds serve `frontend/dist` from the backend after all `/api/*` routes.
 
 ## Data Model
 
 Core tables are `users`, `posts`, `follows`, `likes`, and `comments`.
 
-- `follows` uses a composite unique primary key on follower/followee.
+- `users` are keyed by the auth provider subject.
+- `follows` uses a composite primary key on follower/followee.
 - `likes` enforces one like per user/post pair.
-- `posts`, `likes`, `comments`, and follows cascade when their related user or post is deleted.
-- Feed and profile listings are paginated with newest-first ordering where applicable.
+- Posts, likes, comments, and follows cascade when their related user or post is deleted.
+- Feed, profile, and comment listings are paginated with newest-first ordering where applicable.
 
 ## API Conventions
 
 - API routes are mounted under `/api/*`, except `GET /me` for the authenticated current user.
-- Error responses use a consistent JSON shape with an error code and message.
-- Request validation is handled with Zod at route boundaries.
-- Protected routes require a bearer token issued by the app after myClawTeam auth verification.
+- Protected routes require the app-issued bearer token.
+- Error responses use `{ error, code, details? }`.
+- Zod validation failures return `400` with code `VALIDATION_ERROR`.
+- Domain errors use stable codes such as `INVALID_IMAGE_URL`, `SELF_FOLLOW`, `SELF_UNFOLLOW`, and `NOT_FOUND`.
+
+## Testing
+
+- Backend service tests cover serialization, service result shapes, pagination behavior, and domain branches.
+- Route-level tests lock validation and error response contracts.
+- An API-level E2E test covers login-token usage, upload URL creation, post creation, follow, feed, like, and comment flow.
 
 ## Configuration And Deployment
 
 - Required runtime config is documented in `.env.example`.
 - Backend listens on `HOST`/`PORT`, defaulting to `0.0.0.0:8080`.
+- Use PostgreSQL via `DATABASE_URL`; do not introduce SQLite, JSON-file, local disk, or in-memory durable storage.
+- Use S3-compatible object storage for uploaded images; preserve the invariant that object keys include `S3_PREFIX`.
 - Use `npm run deploy:build` to build frontend and backend.
-- Use `npm run deploy:start` to run Prisma migrations and then start the compiled backend.
-- Prisma migrations run through `npm run prisma:migrate` / `npm run deploy:migrate`.
-- Production deployments should set `NODE_ENV=production`, `SELF_URL`, `VITE_API_BASE_URL`, PostgreSQL credentials, myClawTeam auth vars, JWT secret, and S3 vars before build/start.
+- Use `npm run deploy:start` to run Prisma migrations and start the compiled backend.
 
 ## Repository Conventions
 
 - Do not hardcode database URLs, auth secrets, JWT secrets, or object-storage credentials.
-- Do not introduce alternative durable storage backends.
-- Preserve the S3 prefix invariant: every stored object key must include `S3_PREFIX`.
-- Keep backend tests focused on service behavior and core flow regressions.
+- Keep route handlers thin: validation/auth composition in routes, persistence in services.
+- Keep shared frontend UI in `frontend/src/components/*` and shared frontend API types/helpers in `frontend/src/lib/api/*`.
+- Extend route-level tests when changing validation or error response contracts.
