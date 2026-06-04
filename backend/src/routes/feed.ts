@@ -32,6 +32,11 @@ function serializeFeedPost(post: {
   createdAt: Date;
   updatedAt: Date;
   author: Parameters<typeof serializeUser>[0];
+  likes: Array<{ id: string }>;
+  _count: {
+    likes: number;
+    comments: number;
+  };
 }) {
   return {
     id: post.id,
@@ -40,7 +45,10 @@ function serializeFeedPost(post: {
     caption: post.caption,
     createdAt: post.createdAt.toISOString(),
     updatedAt: post.updatedAt.toISOString(),
-    author: serializeUser(post.author)
+    author: serializeUser(post.author),
+    likesCount: post._count.likes,
+    commentsCount: post._count.comments,
+    viewerHasLiked: post.likes.length > 0
   };
 }
 
@@ -80,7 +88,22 @@ feedRouter.get(
           }
         },
         include: {
-          author: true
+          author: true,
+          likes: {
+            where: {
+              userId: viewerId
+            },
+            select: {
+              id: true
+            },
+            take: 1
+          },
+          _count: {
+            select: {
+              likes: true,
+              comments: true
+            }
+          }
         },
         orderBy: [
           {

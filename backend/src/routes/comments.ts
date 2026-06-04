@@ -179,10 +179,10 @@ commentsRouter.get(
           },
           orderBy: [
             {
-              createdAt: "asc"
+              createdAt: "desc"
             },
             {
-              id: "asc"
+              id: "desc"
             }
           ],
           skip: offset,
