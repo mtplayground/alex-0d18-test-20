@@ -103,6 +103,18 @@ function loadE2EEnv(): void {
   process.env.NODE_ENV = "test";
   process.env.JWT_SECRET ??=
     "issue-27-e2e-test-secret-at-least-thirty-two-characters";
+  process.env.MCTAI_AUTH_URL ??= "https://auth.mctai.app";
+  process.env.MCTAI_AUTH_APP_TOKEN ??= "core-flow-test-app-token";
+  process.env.MCTAI_AUTH_JWKS_URL ??= "https://auth.mctai.app/.well-known/jwks.json";
+  process.env.SELF_URL ??= "https://core-flow-test.example.com";
+  process.env.S3_ACCESS_KEY_ID ??= "core-flow-test-access-key";
+  process.env.S3_SECRET_ACCESS_KEY ??= "core-flow-test-secret-key";
+  process.env.S3_BUCKET ??= "core-flow-test-bucket";
+  process.env.S3_PREFIX ??= "app_alex_0d18_test_20_abc966/";
+  process.env.S3_ENDPOINT ??= "https://fly.storage.tigris.dev";
+  process.env.S3_REGION ??= "auto";
+  process.env.S3_FORCE_PATH_STYLE ??= "true";
+  process.env.S3_PUBLIC_BASE_URL ??= "https://storage.example.com";
 }
 
 async function listen(app: ReturnType<typeof createApp>) {
