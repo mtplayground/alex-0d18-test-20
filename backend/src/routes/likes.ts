@@ -6,13 +6,10 @@ import {
 } from "express";
 import { z } from "zod";
 import { getPrismaClient } from "../db/prisma.js";
-import {
-  sendNotFound,
-  sendUnauthorized,
-  sendValidationError
-} from "../http/responses.js";
+import { sendNotFound } from "../http/responses.js";
 import { requireAuth } from "../middleware/auth.js";
 import { updatePostLike } from "../services/likesService.js";
+import { getAuthenticatedUserId, parseRequest } from "./helpers.js";
 
 const likeParamsSchema = z.object({
   postId: z.string().trim().min(1)
@@ -20,34 +17,29 @@ const likeParamsSchema = z.object({
 
 export const likesRouter = Router();
 
-function getAuthenticatedUserId(req: Request): string | null {
-  return req.auth?.user.googleSub ?? null;
-}
-
-function sendInvalidLikeRequest(res: Response, error: z.ZodError) {
-  sendValidationError(res, error, "Invalid like request");
-}
-
 likesRouter.post(
   "/:postId",
   requireAuth,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const parsed = likeParamsSchema.safeParse(req.params);
+      const params = parseRequest({
+        schema: likeParamsSchema,
+        input: req.params,
+        res,
+        message: "Invalid like request"
+      });
 
-      if (!parsed.success) {
-        sendInvalidLikeRequest(res, parsed.error);
+      if (!params) {
         return;
       }
 
-      const userId = getAuthenticatedUserId(req);
+      const userId = getAuthenticatedUserId(req, res);
 
       if (!userId) {
-        sendUnauthorized(res, "Missing authenticated user");
         return;
       }
 
-      const { postId } = parsed.data;
+      const { postId } = params;
       const likeState = await updatePostLike({
         prisma: getPrismaClient(),
         userId,
@@ -72,21 +64,24 @@ likesRouter.delete(
   requireAuth,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const parsed = likeParamsSchema.safeParse(req.params);
+      const params = parseRequest({
+        schema: likeParamsSchema,
+        input: req.params,
+        res,
+        message: "Invalid like request"
+      });
 
-      if (!parsed.success) {
-        sendInvalidLikeRequest(res, parsed.error);
+      if (!params) {
         return;
       }
 
-      const userId = getAuthenticatedUserId(req);
+      const userId = getAuthenticatedUserId(req, res);
 
       if (!userId) {
-        sendUnauthorized(res, "Missing authenticated user");
         return;
       }
 
-      const { postId } = parsed.data;
+      const { postId } = params;
       const likeState = await updatePostLike({
         prisma: getPrismaClient(),
         userId,
