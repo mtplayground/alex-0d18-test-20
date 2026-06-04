@@ -8,27 +8,31 @@ datasource db {
 }
 
 model User {
-  googleSub String   @id @map("google_sub")
+  googleSub String    @id @map("google_sub")
   email     String
   name      String?
-  avatarUrl String?  @map("avatar_url")
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  avatarUrl String?   @map("avatar_url")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   posts     Post[]
-  following Follow[] @relation("FollowFollower")
-  followers Follow[] @relation("FollowFollowee")
+  likes     Like[]
+  comments  Comment[]
+  following Follow[]  @relation("FollowFollower")
+  followers Follow[]  @relation("FollowFollowee")
 
   @@map("users")
 }
 
 model Post {
-  id        String   @id @default(cuid())
-  authorId  String   @map("author_id")
-  imageUrl  String   @map("image_url")
+  id        String    @id @default(cuid())
+  authorId  String    @map("author_id")
+  imageUrl  String    @map("image_url")
   caption   String?
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  author    User     @relation(fields: [authorId], references: [googleSub], onDelete: Cascade)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  author    User      @relation(fields: [authorId], references: [googleSub], onDelete: Cascade)
+  likes     Like[]
+  comments  Comment[]
 
   @@index([authorId])
   @@map("posts")
@@ -43,4 +47,32 @@ model Follow {
   @@id([followerId, followeeId])
   @@index([followeeId])
   @@map("follows")
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  postId    String   @map("post_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  user      User     @relation(fields: [userId], references: [googleSub], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@index([postId])
+  @@map("likes")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String   @map("post_id")
+  authorId  String   @map("author_id")
+  content   String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [googleSub], onDelete: Cascade)
+
+  @@index([postId, createdAt])
+  @@index([authorId])
+  @@map("comments")
 }
