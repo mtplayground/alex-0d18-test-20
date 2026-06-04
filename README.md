@@ -16,7 +16,11 @@ npm run build
 npm run typecheck
 npm run lint
 npm run format:check
+npm run prisma:generate
+npm run prisma:validate
+npm run prisma:migrate
 npm start
 ```
 
 The backend listens on `0.0.0.0:8080` by default and exposes `GET /api/health`.
+Prisma is configured for PostgreSQL via `DATABASE_URL`.

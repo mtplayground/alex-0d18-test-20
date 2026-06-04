@@ -1,0 +1,1 @@
+-- Initial empty migration. Data models are added in later issue-specific migrations.

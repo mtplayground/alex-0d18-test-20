@@ -16,6 +16,9 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "prisma:generate": "npm run prisma:generate --workspace backend",
+    "prisma:validate": "npm run prisma:validate --workspace backend",
+    "prisma:migrate": "npm run prisma:migrate --workspace backend",
     "start": "npm run start --workspace backend"
   },
   "devDependencies": {
