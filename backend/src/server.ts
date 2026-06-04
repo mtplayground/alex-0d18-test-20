@@ -12,12 +12,12 @@ const server = app.listen(port, host, () => {
   console.log(`Backend listening on http://${host}:${port}`);
 });
 
-server.on("error", (err) => {
+server.on("error", (err: NodeJS.ErrnoException) => {
   console.error("Failed to start backend server", {
-    name: err?.name,
-    code: err?.code,
-    message: err?.message,
-    stack: err?.stack
+    name: err.name,
+    code: err.code,
+    message: err.message,
+    stack: err.stack
   });
   process.exitCode = 1;
 });
