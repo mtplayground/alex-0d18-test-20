@@ -1,0 +1,38 @@
+Architecture plan
+
+Project shape
+- Use a Node/TypeScript monorepo with two first-class packages:
+  - frontend/: Vite + React SPA, React Router routes, AuthContext, API client, Tailwind app shell.
+  - backend/: Express API, route modules, service modules, Prisma client, middleware, validation, tests.
+- Keep root-level package/workspace configuration so shared scripts can run lint, format, typecheck, test, and build across both packages.
+- Shared contracts should live in shared/ or packages/shared once Issue #2 introduces TypeScript conventions. Use Zod schemas as the source for request/response validation where practical, and export inferred types for frontend consumption.
+
+Suggested file organization
+- frontend/src/
+  - main.tsx, App.tsx, routes/, pages/, components/, contexts/auth.tsx, lib/api.ts, lib/storage.ts, styles/
+  - Pages map to product flows: feed, create post, profile, auth callback.
+- backend/src/
+  - server.ts, app.ts, config/env.ts, prisma.ts
+  - routes/auth.ts, me.ts, posts.ts, uploads.ts, follows.ts, feed.ts, likes.ts, comments.ts, profiles.ts
+  - services/authService.ts, postService.ts, followService.ts, feedService.ts, interactionService.ts, profileService.ts, storageService.ts
+  - middleware/auth.ts, errors.ts, validate.ts
+  - schemas/ for Zod request contracts and types/ for Express request augmentation.
+- prisma/
+  - schema.prisma and migrations/ added incrementally by model issues.
+
+Issue dependency map
+- Foundation: #1 creates the monorepo; #2 adds TypeScript/lint/format; #3 adds Prisma/PostgreSQL; #4 adds Tailwind/router shell; #5 centralizes environment config.
+- Auth path: #6 users model -> #7 Google OAuth callback/JWT -> #8 auth middleware and GET /me -> #9 frontend sign-in/AuthContext -> #10 logged-in user display.
+- Posting path: #11 posts model -> #12 presigned upload URL -> #13 create post endpoint -> #14 upload/create-post UI.
+- Follow/feed path: #15 follows model -> #16 follow/unfollow endpoints -> #17 feed endpoint -> #18 follow button and feed page.
+- Interactions/profile path: #19 likes/comments models -> #20 like/unlike -> #21 comments -> #22 UI for likes/comments; #23 profile endpoint -> #24 profile page.
+- Hardening: #25 unit tests, #26 validation/error review, #27 end-to-end core flow, #28 self-hosting deployment prep.
+
+Key design decisions
+- Authentication: backend exchanges Google authorization code, upserts users by google_sub, issues JWT containing user id. Frontend stores token and sends Authorization: Bearer headers. GET /me is the canonical session hydration endpoint.
+- Database: Prisma models should use stable cuid/uuid primary keys, explicit createdAt/updatedAt fields, unique constraints for google_sub, follows(followerId, followeeId), and likes(userId, postId), plus indexes for feed/profile queries.
+- API style: REST endpoints grouped by resource. Keep business logic in services so #25 can unit test auth, posts, follows, feed, likes, and comments without HTTP setup.
+- Uploads: backend only signs object-storage uploads and persists the final public/object URL when creating posts. Validate content type, size intent, and ownership-sensitive actions.
+- Frontend: keep UI state thin; use a central API helper for auth headers and error handling. Route guards should rely on AuthContext and /me.
+- Errors and validation: introduce consistent JSON errors early, then complete review in #26. Zod schemas should protect all mutating endpoints.
+- Deployment: #28 should provide production scripts, Prisma migration instructions, environment docs, and self-hosting notes for database, Google OAuth, object storage, JWT secret, frontend URL, and backend URL.
