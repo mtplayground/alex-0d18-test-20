@@ -1,11 +1,21 @@
 import type { Prisma, PrismaClient, User } from "@prisma/client";
 import { z } from "zod";
-import { buildPagination } from "./feedService.js";
 import { serializeUser } from "./authService.js";
+import {
+  buildPaginatedItems,
+  createPaginationQuerySchema,
+  okServiceResult,
+  type OkServiceResult,
+  type Pagination
+} from "./pagination.js";
 
 export const MAX_COMMENT_LENGTH = 1_000;
 export const DEFAULT_COMMENT_LIMIT = 50;
 export const MAX_COMMENT_LIMIT = 100;
+export const listCommentsQuerySchema = createPaginationQuerySchema({
+  defaultLimit: DEFAULT_COMMENT_LIMIT,
+  maxLimit: MAX_COMMENT_LIMIT
+});
 
 export const createCommentSchema = z.object({
   content: z.string().trim().min(1).max(MAX_COMMENT_LENGTH)
@@ -23,6 +33,17 @@ type CommentRecord = {
   updatedAt: Date;
   author: User;
 };
+
+export type CommentsPage = {
+  comments: ReturnType<typeof serializeComment>[];
+  pagination: Pagination;
+};
+
+export type ListCommentsResult =
+  | OkServiceResult<CommentsPage>
+  | {
+      status: "post-not-found";
+    };
 
 export function serializeComment(comment: CommentRecord) {
   return {
@@ -86,7 +107,7 @@ export async function listComments({
   postId: string;
   limit: number;
   offset: number;
-}) {
+}): Promise<ListCommentsResult> {
   return await prisma.$transaction(async (tx) => {
     const post = await tx.post.findUnique({
       where: {
@@ -98,7 +119,9 @@ export async function listComments({
     });
 
     if (!post) {
-      return null;
+      return {
+        status: "post-not-found"
+      };
     }
 
     const comments = await (tx as CommentTransaction).comment.findMany({
@@ -119,16 +142,15 @@ export async function listComments({
       skip: offset,
       take: limit + 1
     });
-    const pageItems = comments.slice(0, limit);
+    const { pageItems, pagination } = buildPaginatedItems({
+      items: comments,
+      limit,
+      offset
+    });
 
-    return {
+    return okServiceResult({
       comments: pageItems.map(serializeComment),
-      pagination: buildPagination({
-        itemCount: comments.length,
-        pageItemCount: pageItems.length,
-        limit,
-        offset
-      })
-    };
+      pagination
+    });
   });
 }
