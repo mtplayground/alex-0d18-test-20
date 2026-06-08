@@ -4,6 +4,17 @@
 
 @layer base {
   :root {
+    --app-bg: 248 250 252;
+    --app-surface: 255 255 255;
+    --app-surface-muted: 244 244 245;
+    --app-text: 9 9 11;
+    --app-muted: 82 82 91;
+    --app-border: 228 228 231;
+    --app-accent: 4 120 87;
+    --app-accent-hover: 6 95 70;
+    --app-accent-soft: 236 253 245;
+    --app-accent-text: 6 95 70;
+    --app-ring: 5 150 105;
     font-family:
       Inter,
       ui-sans-serif,
@@ -14,9 +25,35 @@
       sans-serif;
   }
 
+  :root[data-theme="indigo"] {
+    --app-accent: 67 56 202;
+    --app-accent-hover: 55 48 163;
+    --app-accent-soft: 238 242 255;
+    --app-accent-text: 55 48 163;
+    --app-ring: 99 102 241;
+  }
+
+  :root[data-theme="rose"] {
+    --app-accent: 190 18 60;
+    --app-accent-hover: 159 18 57;
+    --app-accent-soft: 255 241 242;
+    --app-accent-text: 159 18 57;
+    --app-ring: 244 63 94;
+  }
+
+  :root[data-theme="amber"] {
+    --app-accent: 180 83 9;
+    --app-accent-hover: 146 64 14;
+    --app-accent-soft: 255 251 235;
+    --app-accent-text: 146 64 14;
+    --app-ring: 245 158 11;
+  }
+
   body {
     min-width: 320px;
     min-height: 100vh;
     margin: 0;
+    background: rgb(var(--app-bg));
+    color: rgb(var(--app-text));
   }
 }
