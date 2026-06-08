@@ -11,11 +11,13 @@
 - Follow/unfollow, like/unlike, post creation, comment creation, and comment listing.
 - React pages for feed, creating posts, profiles, auth callback, and shared navigation.
 - Shared frontend UI components for post cards, profile grids/headers, comments, avatars, and follow buttons.
+- Persisted color themes with a header swatch picker for emerald, indigo, rose, and amber palettes.
 
 ## Architecture
 
 - Monorepo with `frontend/` and `backend/` npm workspaces.
 - Frontend: Vite, React, React Router, Tailwind CSS.
+- Frontend styling uses semantic Tailwind `app.*` color tokens backed by CSS variables, with `ThemeProvider` persisting the selected color theme in localStorage.
 - Frontend API access is split into domain clients: `authApi`, `postsApi`, `feedApi`, `profilesApi`, and `socialApi`, with shared HTTP helpers in `frontend/src/lib/api/http.ts`.
 - Backend: Express, TypeScript, Prisma, Zod, JWT/JWKS verification, AWS SDK v3 for S3-compatible uploads.
 - Backend route helpers centralize authenticated-user extraction and Zod validation/error response handling.
@@ -61,4 +63,5 @@ Core tables are `users`, `posts`, `follows`, `likes`, and `comments`.
 - Do not hardcode database URLs, auth secrets, JWT secrets, or object-storage credentials.
 - Keep route handlers thin: validation/auth composition in routes, persistence in services.
 - Keep shared frontend UI in `frontend/src/components/*` and shared frontend API types/helpers in `frontend/src/lib/api/*`.
+- Use semantic `app.*` Tailwind color classes for frontend UI instead of hardcoded palette colors.
 - Extend route-level tests when changing validation or error response contracts.
