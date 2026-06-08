@@ -21,7 +21,7 @@ export function UserAvatar({
       <img
         src={avatarUrl}
         alt={`${displayName}'s profile image`}
-        className={`${sizeClassName} shrink-0 rounded-full border border-zinc-200 object-cover`}
+        className={`${sizeClassName} shrink-0 rounded-full border border-app-border object-cover`}
         referrerPolicy="no-referrer"
         loading="lazy"
       />
@@ -31,7 +31,7 @@ export function UserAvatar({
   return (
     <div
       aria-hidden="true"
-      className={`${sizeClassName} flex shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 font-semibold text-emerald-800`}
+      className={`${sizeClassName} flex shrink-0 items-center justify-center rounded-full border border-app-border bg-app-accentSoft font-semibold text-app-accentText`}
     >
       {getUserInitial(displayName)}
     </div>

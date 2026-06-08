@@ -128,7 +128,7 @@ export function CreatePostPage() {
   if (status === "loading") {
     return (
       <CreatePostShell>
-        <div className="rounded-lg border border-dashed border-zinc-300 bg-white p-8 text-sm text-zinc-600">
+        <div className="rounded-lg border border-dashed border-app-border bg-app-surface p-8 text-sm text-app-muted">
           Loading.
         </div>
       </CreatePostShell>
@@ -138,12 +138,12 @@ export function CreatePostPage() {
   if (status !== "authenticated") {
     return (
       <CreatePostShell>
-        <div className="space-y-4 rounded-lg border border-dashed border-zinc-300 bg-white p-8">
-          <p className="text-sm text-zinc-600">Sign in to publish a post.</p>
+        <div className="space-y-4 rounded-lg border border-dashed border-app-border bg-app-surface p-8">
+          <p className="text-sm text-app-muted">Sign in to publish a post.</p>
           <button
             type="button"
             onClick={signIn}
-            className="inline-flex h-10 items-center justify-center rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+            className="inline-flex h-10 items-center justify-center rounded-md bg-app-accent px-4 text-sm font-semibold text-app-surface transition-colors hover:bg-app-accentHover focus:outline-none focus:ring-2 focus:ring-app-ring focus:ring-offset-2 focus:ring-offset-app-bg"
           >
             Sign in
           </button>
@@ -163,11 +163,11 @@ export function CreatePostPage() {
         <div className="space-y-4">
           <label
             htmlFor="post-image"
-            className="block text-sm font-semibold text-zinc-900"
+            className="block text-sm font-semibold text-app-text"
           >
             Image
           </label>
-          <div className="rounded-lg border border-dashed border-zinc-300 bg-white p-4">
+          <div className="rounded-lg border border-dashed border-app-border bg-app-surface p-4">
             {previewUrl ? (
               <img
                 src={previewUrl}
@@ -175,7 +175,7 @@ export function CreatePostPage() {
                 className="aspect-square w-full rounded-md object-cover"
               />
             ) : (
-              <div className="flex aspect-square w-full items-center justify-center rounded-md bg-zinc-100 text-sm text-zinc-500">
+              <div className="flex aspect-square w-full items-center justify-center rounded-md bg-app-surfaceMuted text-sm text-app-muted">
                 No image selected.
               </div>
             )}
@@ -188,14 +188,14 @@ export function CreatePostPage() {
               accept="image/gif,image/jpeg,image/png,image/webp"
               onChange={handleFileChange}
               disabled={isSubmitting}
-              className="block w-full max-w-md text-sm text-zinc-700 file:mr-4 file:h-10 file:rounded-md file:border-0 file:bg-zinc-900 file:px-4 file:text-sm file:font-semibold file:text-white hover:file:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="block w-full max-w-md text-sm text-app-muted file:mr-4 file:h-10 file:rounded-md file:border-0 file:bg-app-text file:px-4 file:text-sm file:font-semibold file:text-app-surface hover:file:bg-app-muted disabled:cursor-not-allowed disabled:opacity-60"
             />
             {file ? (
               <button
                 type="button"
                 onClick={resetSelection}
                 disabled={isSubmitting}
-                className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-900 transition-colors hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex h-10 items-center justify-center rounded-md border border-app-border bg-app-surface px-4 text-sm font-semibold text-app-text transition-colors hover:bg-app-surfaceMuted disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Remove
               </button>
@@ -206,7 +206,7 @@ export function CreatePostPage() {
         <div className="space-y-4">
           <label
             htmlFor="post-caption"
-            className="block text-sm font-semibold text-zinc-900"
+            className="block text-sm font-semibold text-app-text"
           >
             Caption
           </label>
@@ -217,23 +217,23 @@ export function CreatePostPage() {
             maxLength={2200}
             rows={8}
             disabled={isSubmitting}
-            className="w-full resize-none rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-950 shadow-sm outline-none transition-colors placeholder:text-zinc-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full resize-none rounded-md border border-app-border bg-app-surface px-3 py-2 text-sm text-app-text shadow-sm outline-none transition-colors placeholder:text-app-muted focus:border-app-ring focus:ring-2 focus:ring-app-ring/20 disabled:cursor-not-allowed disabled:opacity-60"
             placeholder="Write a caption."
           />
-          <div className="flex items-center justify-between gap-4 text-xs text-zinc-500">
+          <div className="flex items-center justify-between gap-4 text-xs text-app-muted">
             <span>{caption.length}/2200</span>
             <span>{file ? formatBytes(file.size) : ""}</span>
           </div>
           <button
             type="submit"
             disabled={!file || !token || isSubmitting}
-            className="inline-flex h-10 w-full items-center justify-center rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-10 w-full items-center justify-center rounded-md bg-app-accent px-4 text-sm font-semibold text-app-surface transition-colors hover:bg-app-accentHover focus:outline-none focus:ring-2 focus:ring-app-ring focus:ring-offset-2 focus:ring-offset-app-bg disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSubmitting ? "Publishing" : "Publish"}
           </button>
           {error ? <p className="text-sm text-red-700">{error}</p> : null}
           {createdPost ? (
-            <p className="text-sm text-emerald-700">
+            <p className="text-sm text-app-accentText">
               Post published at{" "}
               {new Date(createdPost.createdAt).toLocaleString()}.
             </p>
@@ -248,8 +248,8 @@ function CreatePostShell({ children }: { children: ReactNode }) {
   return (
     <section className="space-y-6">
       <div>
-        <p className="text-sm font-semibold text-emerald-700">Create</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-normal text-zinc-950 sm:text-4xl">
+        <p className="text-sm font-semibold text-app-accentText">Create</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-normal text-app-text sm:text-4xl">
           New post
         </h1>
       </div>
