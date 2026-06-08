@@ -4,7 +4,7 @@ import type { ApiProfilePost } from "../../lib/api/types";
 export function ProfilePostGrid({ posts }: { posts: ApiProfilePost[] }) {
   if (posts.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-zinc-300 bg-white p-8 text-sm text-zinc-600">
+      <div className="rounded-lg border border-dashed border-app-border bg-app-surface p-8 text-sm text-app-muted">
         No posts yet.
       </div>
     );
@@ -18,21 +18,21 @@ export function ProfilePostGrid({ posts }: { posts: ApiProfilePost[] }) {
       {posts.map((post) => (
         <article
           key={post.id}
-          className="group overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm"
+          className="group overflow-hidden rounded-lg border border-app-border bg-app-surface shadow-sm"
         >
           <img
             src={post.imageUrl}
             alt={post.caption?.trim() || "Profile post"}
-            className="aspect-square w-full bg-zinc-100 object-cover transition-transform duration-200 group-hover:scale-[1.02]"
+            className="aspect-square w-full bg-app-surfaceMuted object-cover transition-transform duration-200 group-hover:scale-[1.02]"
             loading="lazy"
           />
           <div className="space-y-2 p-3">
             {post.caption ? (
-              <p className="line-clamp-2 break-words text-sm leading-5 text-zinc-800">
+              <p className="line-clamp-2 break-words text-sm leading-5 text-app-text">
                 {post.caption}
               </p>
             ) : null}
-            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-500">
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-app-muted">
               <span>{formatCount(post.likesCount, "like")}</span>
               <span>{formatCount(post.commentsCount, "comment")}</span>
             </div>

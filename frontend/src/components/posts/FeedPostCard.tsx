@@ -182,12 +182,12 @@ export function FeedPostCard({
   const isCommentSubmitting = commentsStatus === "submitting";
 
   return (
-    <article className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
+    <article className="overflow-hidden rounded-lg border border-app-border bg-app-surface shadow-sm">
       <header className="flex min-w-0 items-center justify-between gap-4 p-4">
         <div className="flex min-w-0 items-center gap-3">
           <Link
             to={`/profile/${encodeURIComponent(post.authorId)}`}
-            className="shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+            className="shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-app-ring focus:ring-offset-2 focus:ring-offset-app-bg"
           >
             <UserAvatar
               avatarUrl={post.author.avatarUrl}
@@ -197,11 +197,11 @@ export function FeedPostCard({
           <div className="min-w-0">
             <Link
               to={`/profile/${encodeURIComponent(post.authorId)}`}
-              className="block truncate text-sm font-semibold text-zinc-950 transition-colors hover:text-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+              className="block truncate text-sm font-semibold text-app-text transition-colors hover:text-app-accentText focus:outline-none focus:ring-2 focus:ring-app-ring focus:ring-offset-2 focus:ring-offset-app-bg"
             >
               {displayName}
             </Link>
-            <p className="truncate text-xs text-zinc-500">
+            <p className="truncate text-xs text-app-muted">
               {post.author.email}
             </p>
           </div>
@@ -219,7 +219,7 @@ export function FeedPostCard({
       <img
         src={post.imageUrl}
         alt={post.caption?.trim() || `Post by ${displayName}`}
-        className="aspect-square w-full bg-zinc-100 object-cover"
+        className="aspect-square w-full bg-app-surfaceMuted object-cover"
         loading="lazy"
       />
 
@@ -231,35 +231,35 @@ export function FeedPostCard({
             disabled={isLikeUpdating}
             aria-pressed={isLiked}
             className={[
-              "inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60",
+              "inline-flex h-9 items-center justify-center rounded-md px-3 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-app-ring focus:ring-offset-2 focus:ring-offset-app-bg disabled:cursor-not-allowed disabled:opacity-60",
               isLiked
-                ? "bg-emerald-700 text-white hover:bg-emerald-800"
-                : "border border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-100"
+                ? "bg-app-accent text-app-surface hover:bg-app-accentHover"
+                : "border border-app-border bg-app-surface text-app-text hover:bg-app-surfaceMuted"
             ].join(" ")}
           >
             {isLikeUpdating ? "Saving" : isLiked ? "Liked" : "Like"}
           </button>
-          <span className="text-sm font-medium text-zinc-700">
+          <span className="text-sm font-medium text-app-text">
             {formatCount(likesCount, "like")}
           </span>
-          <span className="text-sm text-zinc-500">
+          <span className="text-sm text-app-muted">
             {formatCount(commentsCount, "comment")}
           </span>
         </div>
 
         {post.caption ? (
-          <p className="whitespace-pre-wrap break-words text-sm leading-6 text-zinc-800">
+          <p className="whitespace-pre-wrap break-words text-sm leading-6 text-app-text">
             {post.caption}
           </p>
         ) : null}
         <time
           dateTime={post.createdAt}
-          className="block text-xs leading-5 text-zinc-500"
+          className="block text-xs leading-5 text-app-muted"
         >
           {publishedAt}
         </time>
 
-        <div className="space-y-3 border-t border-zinc-100 pt-3">
+        <div className="space-y-3 border-t border-app-border pt-3">
           {commentsLoaded ? (
             <CommentList comments={comments} />
           ) : (
@@ -272,7 +272,7 @@ export function FeedPostCard({
                 })
               }
               disabled={isCommentsLoading}
-              className="text-sm font-semibold text-emerald-700 transition-colors hover:text-emerald-900 disabled:cursor-not-allowed disabled:opacity-60"
+              className="text-sm font-semibold text-app-accentText transition-colors hover:text-app-accent disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isCommentsLoading
                 ? "Loading comments"
@@ -292,7 +292,7 @@ export function FeedPostCard({
                 })
               }
               disabled={isCommentsLoadingMore}
-              className="text-sm font-semibold text-emerald-700 transition-colors hover:text-emerald-900 disabled:cursor-not-allowed disabled:opacity-60"
+              className="text-sm font-semibold text-app-accentText transition-colors hover:text-app-accent disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isCommentsLoadingMore ? "Loading" : "Load more comments"}
             </button>

@@ -25,11 +25,11 @@ export function FollowButton({
       onClick={onClick}
       disabled={followState.isUpdating}
       className={[
-        "inline-flex shrink-0 items-center justify-center rounded-md text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60",
+        "inline-flex shrink-0 items-center justify-center rounded-md text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-app-ring focus:ring-offset-2 focus:ring-offset-app-bg disabled:cursor-not-allowed disabled:opacity-60",
         sizeClasses[size],
         followState.isFollowing
-          ? "border border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-100"
-          : "bg-emerald-700 text-white hover:bg-emerald-800"
+          ? "border border-app-border bg-app-surface text-app-text hover:bg-app-surfaceMuted"
+          : "bg-app-accent text-app-surface hover:bg-app-accentHover"
       ].join(" ")}
     >
       {getFollowButtonLabel(followState)}

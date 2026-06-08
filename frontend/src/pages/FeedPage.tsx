@@ -142,14 +142,14 @@ export function FeedPageView() {
   if (authStatus !== "authenticated") {
     return (
       <FeedShell>
-        <div className="space-y-4 rounded-lg border border-dashed border-zinc-300 bg-white p-8">
-          <p className="text-sm text-zinc-600">
+        <div className="space-y-4 rounded-lg border border-dashed border-app-border bg-app-surface p-8">
+          <p className="text-sm text-app-muted">
             Sign in to see posts from people you follow.
           </p>
           <button
             type="button"
             onClick={signIn}
-            className="inline-flex h-10 items-center justify-center rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+            className="inline-flex h-10 items-center justify-center rounded-md bg-app-accent px-4 text-sm font-semibold text-app-surface transition-colors hover:bg-app-accentHover focus:outline-none focus:ring-2 focus:ring-app-ring focus:ring-offset-2 focus:ring-offset-app-bg"
           >
             Sign in
           </button>
@@ -208,7 +208,7 @@ export function FeedPageView() {
             })
           }
           disabled={isLoadingMore}
-          className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-900 transition-colors hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex h-10 items-center justify-center rounded-md border border-app-border bg-app-surface px-4 text-sm font-semibold text-app-text transition-colors hover:bg-app-surfaceMuted focus:outline-none focus:ring-2 focus:ring-app-ring focus:ring-offset-2 focus:ring-offset-app-bg disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isLoadingMore ? "Loading" : "Load more"}
         </button>
@@ -221,8 +221,8 @@ function FeedShell({ children }: { children: ReactNode }) {
   return (
     <section className="space-y-6">
       <div>
-        <p className="text-sm font-semibold text-emerald-700">Home</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-normal text-zinc-950 sm:text-4xl">
+        <p className="text-sm font-semibold text-app-accentText">Home</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-normal text-app-text sm:text-4xl">
           Following feed
         </h1>
       </div>
@@ -233,7 +233,7 @@ function FeedShell({ children }: { children: ReactNode }) {
 
 function StatusPanel({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-lg border border-dashed border-zinc-300 bg-white p-8 text-sm text-zinc-600">
+    <div className="rounded-lg border border-dashed border-app-border bg-app-surface p-8 text-sm text-app-muted">
       {children}
     </div>
   );

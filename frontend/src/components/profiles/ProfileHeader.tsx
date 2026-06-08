@@ -20,7 +20,7 @@ export function ProfileHeader({
   );
 
   return (
-    <section className="grid gap-6 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
+    <section className="grid gap-6 rounded-lg border border-app-border bg-app-surface p-6 shadow-sm sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
       <UserAvatar
         avatarUrl={profile.user.avatarUrl}
         displayName={displayName}
@@ -29,10 +29,10 @@ export function ProfileHeader({
       <div className="min-w-0 space-y-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <h2 className="truncate text-2xl font-semibold tracking-normal text-zinc-950">
+            <h2 className="truncate text-2xl font-semibold tracking-normal text-app-text">
               {displayName}
             </h2>
-            <p className="truncate text-sm text-zinc-500">
+            <p className="truncate text-sm text-app-muted">
               {profile.user.email}
             </p>
           </div>
@@ -60,9 +60,9 @@ export function ProfileHeader({
 
 function ProfileStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-md bg-zinc-50 px-3 py-2">
-      <dt className="text-xs font-medium text-zinc-500">{label}</dt>
-      <dd className="mt-1 text-lg font-semibold text-zinc-950">{value}</dd>
+    <div className="rounded-md bg-app-surfaceMuted px-3 py-2">
+      <dt className="text-xs font-medium text-app-muted">{label}</dt>
+      <dd className="mt-1 text-lg font-semibold text-app-text">{value}</dd>
     </div>
   );
 }
