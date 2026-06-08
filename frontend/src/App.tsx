@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { NavLink, Route, Routes, useNavigate } from "react-router-dom";
+import { useTheme } from "./contexts/theme";
 import { useAuth } from "./contexts/useAuth";
 import type { ApiUser } from "./lib/api/types";
 import { CreatePostPage } from "./pages/CreatePostPage";
@@ -41,7 +42,10 @@ export default function App() {
             </nav>
           </div>
 
-          <AuthControls />
+          <div className="flex items-center gap-3">
+            <ColorSettings />
+            <AuthControls />
+          </div>
         </div>
       </header>
 
@@ -56,6 +60,41 @@ export default function App() {
           <Route path="*" element={<NotFoundRoute />} />
         </Routes>
       </main>
+    </div>
+  );
+}
+
+function ColorSettings() {
+  const { setTheme, theme: currentTheme, themes } = useTheme();
+
+  return (
+    <div aria-label="Color theme" className="flex items-center gap-1">
+      {themes.map((theme) => {
+        const isSelected = theme.value === currentTheme;
+
+        return (
+          <button
+            key={theme.value}
+            type="button"
+            aria-label={`Use ${theme.label} color theme`}
+            aria-pressed={isSelected}
+            title={theme.label}
+            onClick={() => setTheme(theme.value)}
+            className={[
+              "inline-flex size-8 items-center justify-center rounded-md border bg-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2",
+              isSelected
+                ? "border-zinc-950"
+                : "border-zinc-300 hover:border-zinc-500"
+            ].join(" ")}
+          >
+            <span
+              aria-hidden="true"
+              className="size-4 rounded-full"
+              style={{ backgroundColor: theme.swatch }}
+            />
+          </button>
+        );
+      })}
     </div>
   );
 }
