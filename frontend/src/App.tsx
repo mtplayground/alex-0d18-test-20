@@ -17,8 +17,8 @@ const navItems = [
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-950">
-      <header className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 backdrop-blur">
+    <div className="min-h-screen bg-app-bg text-app-text">
+      <header className="sticky top-0 z-20 border-b border-app-border bg-app-surface/95 backdrop-blur">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-4 px-4 sm:px-6">
           <div className="flex min-w-0 flex-1 items-center gap-6">
             <nav aria-label="Primary navigation" className="flex gap-1">
@@ -31,8 +31,8 @@ export default function App() {
                     [
                       "rounded-md px-3 py-2 text-sm font-medium transition-colors",
                       isActive
-                        ? "bg-emerald-50 text-emerald-800"
-                        : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-950"
+                        ? "bg-app-accentSoft text-app-accentText"
+                        : "text-app-muted hover:bg-app-surfaceMuted hover:text-app-text"
                     ].join(" ")
                   }
                 >
@@ -81,10 +81,10 @@ function ColorSettings() {
             title={theme.label}
             onClick={() => setTheme(theme.value)}
             className={[
-              "inline-flex size-8 items-center justify-center rounded-md border bg-white shadow-sm transition focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2",
+              "inline-flex size-8 items-center justify-center rounded-md border bg-app-surface shadow-sm transition focus:outline-none focus:ring-2 focus:ring-app-ring focus:ring-offset-2 focus:ring-offset-app-bg",
               isSelected
-                ? "border-zinc-950"
-                : "border-zinc-300 hover:border-zinc-500"
+                ? "border-app-text"
+                : "border-app-border hover:border-app-muted"
             ].join(" ")}
           >
             <span
@@ -110,7 +110,7 @@ function AuthControls() {
         <button
           type="button"
           onClick={signOut}
-          className="inline-flex h-10 shrink-0 items-center justify-center rounded-md border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-900 shadow-sm transition-colors hover:border-zinc-400 hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+          className="inline-flex h-10 shrink-0 items-center justify-center rounded-md border border-app-border bg-app-surface px-4 text-sm font-semibold text-app-text shadow-sm transition-colors hover:border-app-muted hover:bg-app-surfaceMuted focus:outline-none focus:ring-2 focus:ring-app-ring focus:ring-offset-2 focus:ring-offset-app-bg"
         >
           Sign out
         </button>
@@ -123,7 +123,7 @@ function AuthControls() {
       type="button"
       onClick={signIn}
       disabled={status === "loading"}
-      className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-900 shadow-sm transition-colors hover:border-zinc-400 hover:bg-zinc-100 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+      className="inline-flex h-10 items-center justify-center rounded-md border border-app-border bg-app-surface px-4 text-sm font-semibold text-app-text shadow-sm transition-colors hover:border-app-muted hover:bg-app-surfaceMuted focus:outline-none focus:ring-2 focus:ring-app-ring focus:ring-offset-2 focus:ring-offset-app-bg disabled:cursor-not-allowed disabled:opacity-60"
     >
       Sign in
     </button>
@@ -143,22 +143,22 @@ function UserSummary({ user }: { user: ApiUser }) {
         <img
           src={user.avatarUrl}
           alt={avatarLabel}
-          className="size-10 shrink-0 rounded-full border border-zinc-200 object-cover"
+          className="size-10 shrink-0 rounded-full border border-app-border object-cover"
           referrerPolicy="no-referrer"
         />
       ) : (
         <div
           aria-hidden="true"
-          className="flex size-10 shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-sm font-semibold text-emerald-800"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full border border-app-border bg-app-accentSoft text-sm font-semibold text-app-accentText"
         >
           {getUserInitial(displayName)}
         </div>
       )}
       <div className="hidden min-w-0 flex-col sm:flex">
-        <span className="max-w-40 truncate text-sm font-semibold leading-5 text-zinc-950">
+        <span className="max-w-40 truncate text-sm font-semibold leading-5 text-app-text">
           {displayName}
         </span>
-        <span className="max-w-40 truncate text-xs leading-4 text-zinc-500">
+        <span className="max-w-40 truncate text-xs leading-4 text-app-muted">
           Signed in
         </span>
       </div>
@@ -182,8 +182,8 @@ function PageFrame({
   return (
     <section className="space-y-6">
       <div>
-        <p className="text-sm font-semibold text-emerald-700">{eyebrow}</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-normal text-zinc-950 sm:text-4xl">
+        <p className="text-sm font-semibold text-app-accentText">{eyebrow}</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-normal text-app-text sm:text-4xl">
           {title}
         </h1>
       </div>
@@ -195,7 +195,7 @@ function PageFrame({
 function ExploreRoute() {
   return (
     <PageFrame eyebrow="Explore" title="Discover people">
-      <div className="rounded-lg border border-dashed border-zinc-300 bg-white p-8 text-sm text-zinc-600">
+      <div className="rounded-lg border border-dashed border-app-border bg-app-surface p-8 text-sm text-app-muted">
         No people to show yet.
       </div>
     </PageFrame>
@@ -207,7 +207,7 @@ function NotFoundRoute() {
     <PageFrame eyebrow="Not found" title="Page not found">
       <NavLink
         to="/"
-        className="inline-flex h-10 items-center rounded-md bg-emerald-700 px-4 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+        className="inline-flex h-10 items-center rounded-md bg-app-accent px-4 text-sm font-semibold text-app-surface transition-colors hover:bg-app-accentHover focus:outline-none focus:ring-2 focus:ring-app-ring focus:ring-offset-2 focus:ring-offset-app-bg"
       >
         Go home
       </NavLink>
@@ -239,7 +239,7 @@ function AuthCallbackRoute() {
 
   return (
     <PageFrame eyebrow="Sign in" title="Completing sign in">
-      <div className="rounded-lg border border-dashed border-zinc-300 bg-white p-8 text-sm text-zinc-600">
+      <div className="rounded-lg border border-dashed border-app-border bg-app-surface p-8 text-sm text-app-muted">
         {error ?? "One moment."}
       </div>
     </PageFrame>
